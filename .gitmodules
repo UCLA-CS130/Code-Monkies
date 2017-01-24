@@ -1,0 +1,3 @@
+[submodule "nginx-configparser"]
+	path = nginx-configparser
+	url = https://github.com/ahesselgrave/nginx-configparser
