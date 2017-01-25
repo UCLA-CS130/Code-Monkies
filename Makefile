@@ -14,7 +14,7 @@ export LDFLAGS=-lboost_system
 # Adapted from this stackoverflow post: http://stackoverflow.com/a/18137056
 # TODO: Strip trailing slash from PROJ_ROOT
 MAKEFILE_PATH=$(abspath $(lastword $(MAKEFILE_LIST)))
-export PROJ_ROOT=$(dir $(MAKEFILE_PATH))
+export PROJ_ROOT=$(patsubst %/,%,$(dir $(MAKEFILE_PATH)))
 
 export OBJ_DIR=$(PROJ_ROOT)/build
 export BIN_DIR=$(PROJ_ROOT)/bin
@@ -23,8 +23,6 @@ export GTEST_DIR=$(PROJ_ROOT)/lib/googletest/googletest
 
 .PHONY: compile
 compile: lib
-	@echo $(OBJ_DIR)
-	@echo $(BIN_DIR)
 	$(MAKE) -C src
 
 .PHONY: lib

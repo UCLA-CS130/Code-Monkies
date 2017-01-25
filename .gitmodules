@@ -1,3 +1,6 @@
 [submodule "lib/googletest"]
 	path = lib/googletest
 	url = https://github.com/google/googletest
+[submodule "lib/nginx-configparser"]
+	path = lib/nginx-configparser
+	url = https://github.com/ahesselgrave/nginx-configparser

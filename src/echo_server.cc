@@ -5,4 +5,6 @@
 
 int main()
 {
+	// TODO: Remove. Only a temporary measure to test build completion
+	std::cout << "Build complete" << std::endl;
 }
