@@ -22,7 +22,7 @@ export BIN_DIR=$(PROJ_ROOT)/bin
 export GTEST_DIR=$(PROJ_ROOT)/lib/googletest/googletest
 
 .PHONY: compile
-compile:
+compile: lib
 	@echo $(OBJ_DIR)
 	@echo $(BIN_DIR)
 	$(MAKE) -C src
@@ -31,12 +31,12 @@ compile:
 lib:
 	$(MAKE) -C lib
 
-.PHONY: test
-test: compile lib
-	$(MAKE) -C test
+#.PHONY: test
+#test: compile lib
+#	$(MAKE) -C test
 
 .PHONY: clean
 clean:
 	$(MAKE) -C src clean
-	$(MAKE) -C test clean
+#	$(MAKE) -C test clean
 	$(MAKE) -C lib clean
