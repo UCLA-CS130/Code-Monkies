@@ -1,15 +1,10 @@
 #include <cstdlib>
-#include <iostream>
-
-#include <boost/bind.hpp>
 #include <boost/asio.hpp>
 
 #include "config_parser.h"
-#include "helpers.h"
+#include "server.h"
 
 #define USAGE "USAGE: %s config_file_path.\n"
-
-void serve(int port);
 
 int main(int argc, char *argv[])
 {
@@ -35,11 +30,14 @@ int main(int argc, char *argv[])
 
   debugf("server port: %d\n", port);
 
-  serve(port);
-  return 0;
-}
+  try {
+    boost::asio::io_service io_service;
+    Server s(io_service, port);
+    io_service.run();
+  } catch (std::exception &e) {
+    fprintf(stderr, "io_service encountered exception: %s\n", e.what());
+    exit(1);
+  }
 
-void serve(int port)
-{
-  (void) port;
+  return 0;
 }
