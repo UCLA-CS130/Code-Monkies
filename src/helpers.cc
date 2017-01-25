@@ -3,6 +3,13 @@
 
 #include "helpers.h"
 
+/*
+ * Acts the same as printf, but with two benefits:
+ *  1. We can toggle debug statements with a single ifdef, rather than around
+ *    every single statement.
+ *  2. We can change how all debug statements look/work down the road by
+ *    changing one function.
+ */
 void debugf(const char *fmt, ...)
 {
 #ifdef DEBUG

@@ -30,12 +30,19 @@ class Session
     {
     }
 
+    /*
+     * Entry point to a per-client session. Each session consists of a single
+     * read followed by a write.
+     */
     void start()
     {
       do_read();
     }
 
   private:
+    /*
+     * Read data from the client. On success, write back a response.
+     */
     void do_read()
     {
       auto self(shared_from_this());
@@ -59,9 +66,13 @@ class Session
         return;
       }
 
-      // Apparently boost doesn't care to null terminate its strings
+      // Apparently boost doesn't care to null terminate its strings, so we
+      // have to do it ourselves.
       if (length < max_length) {
         data_[length] = 0;
+      } else {
+        // TODO: handle this
+        data_[max_length] = 0;
       }
 
       int response_len = snprintf(response, max_length, RESPONSE,
@@ -85,7 +96,7 @@ class Session
     }
 
     tcp::socket socket_;
-    enum { max_length = 65536 };
+    enum { max_length = 65536 }; // TODO: why is this an enum?
     char data_[max_length];
 };
 

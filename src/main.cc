@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
 
   /*
    * TODO: rewrite this in a more resilient/extensible way.
+   * Right now we assume that the config file looks like "somestring 80;".
+   * This will fail gruesomely if anything is trivially different.
    */
   int port = std::stoi(config.statements_[0]->tokens_[1]);
 

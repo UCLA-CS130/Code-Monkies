@@ -12,6 +12,10 @@
 
 using boost::asio::ip::tcp;
 
+/*
+ * Generic asynchronous server. Listens for connections and passes them off to
+ * a fresh Session object before listening again.
+ */
 class Server
 {
   public:
