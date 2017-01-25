@@ -25,6 +25,10 @@ export PARSER_DIR=$(PROJ_ROOT)/lib/nginx-configparser
 compile: lib
 	$(MAKE) -C src
 
+.PHONY: debug
+debug: lib
+	$(MAKE) -C src debug
+
 .PHONY: lib
 lib:
 	$(MAKE) -C lib
