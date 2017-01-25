@@ -31,7 +31,7 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 # For now, just dump libraries in with object files.
 # TODO: put libraries somewhere more appropriate.
-all : $(OBJ_DIR)/gtest.a $(OBJ_DIR)/gtest_main.a
+all : $(OBJ_DIR)/gtest.a $(OBJ_DIR)/gtest_main.a $(OBJ_DIR)/config_parser.o
 
 # Builds gtest.a and gtest_main.a.
 
@@ -57,7 +57,10 @@ $(OBJ_DIR)/gtest.a : $(OBJ_DIR)/gtest_all.o
 $(OBJ_DIR)/gtest_main.a : $(OBJ_DIR)/gtest_all.o $(OBJ_DIR)/gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
 
+$(OBJ_DIR)/config_parser.o: nginx-configparser/config_parser.cc nginx-configparser/config_parser.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 # src Makefile will clean out .o files.
 .PHONY: clean
 clean:
-	rm -f $(OBJ_DIR)/*.a
+	rm -f $(OBJ_DIR)/*.a $(OBJ_DIR)/*.o

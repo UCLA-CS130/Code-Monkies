@@ -9,9 +9,6 @@ compile: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-$(OBJ_DIR)/config_parser.o: nginx-configparser/config_parser.cc nginx-configparser/config_parser.h
-	$(CXX) $(CXXFLAGS) $< -o $@
-
 $(OBJ_DIR)/echo_server.o: echo_server.cc $(OBJ_DIR)/config_parser.o
 	$(CXX) $(CXXFLAGS) $< -o $@
 
