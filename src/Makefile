@@ -1,3 +1,6 @@
+INCLUDES=-I. -I$(PARSER_DIR)
+CXXFLAGS+=$(INCLUDES)
+
 SOURCES=config_parser.cc echo_server.cc
 OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(SOURCES)) 
 
@@ -11,6 +14,10 @@ $(EXECUTABLE): $(OBJECTS)
 
 $(OBJ_DIR)/echo_server.o: echo_server.cc $(OBJ_DIR)/config_parser.o
 	$(CXX) $(CXXFLAGS) $< -o $@
+
+.PHONY: debug
+debug: CXXFLAGS+=-g -DDEBUG
+debug: compile
 
 .PHONY: clean
 clean:
