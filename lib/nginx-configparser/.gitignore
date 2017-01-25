@@ -1,6 +1,0 @@
-# Project specific
-config_parser*
-libgtest.*
-
-# C++
-*.o
