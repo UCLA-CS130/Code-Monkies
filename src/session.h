@@ -58,8 +58,17 @@ class Session
         debugf("do_write failed to allocate response buffer.\n");
         return;
       }
+
+      // Apparently boost doesn't care to null terminate its strings
+      if (length < max_length) {
+        data_[length] = 0;
+      }
+
       int response_len = snprintf(response, max_length, RESPONSE,
           length, "text/plain", data_);
+
+      debugf("do_write sending response of length %d\n", response_len);
+
       if (response_len >= max_length) {
         // Output was truncated. TODO: handle this
         debugf("do_write had to truncate response.\n");
