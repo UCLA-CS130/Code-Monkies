@@ -6,5 +6,6 @@
 *.o
 *.a
 
-# Ignore executable
+# Ignore executables
 echo_server
+webserver_tests
