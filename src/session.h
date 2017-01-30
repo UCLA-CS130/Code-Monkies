@@ -44,13 +44,19 @@ class Session
     void do_read();
 
     /*
-     * Write data to the client. On success, listen for more data.
+     * Process data received from the client, and choose the appropriate
+     * response handler. For now this just calls do_write.
      */
-    void do_write(std::size_t length);
+    void process_response(std::size_t length);
+
+    /*
+     * Write msg to the client. On success, listen for more data.
+     */
+    void do_write(const char *msg, std::size_t length);
 
     tcp::socket socket_;
-    enum { max_length = 65536 }; // TODO: why is this an enum?
-    char data_[max_length];
+    static const std::size_t MAX_LENGTH = 65536;
+    char data_[MAX_LENGTH];
 };
 
 #endif

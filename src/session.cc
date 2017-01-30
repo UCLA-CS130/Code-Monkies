@@ -5,24 +5,30 @@
 
 #include "session.h"
 
+#include <math.h>
+
 void Session::do_read()
 {
   auto self(shared_from_this());
-  socket_.async_read_some(boost::asio::buffer(data_, max_length),
+  socket_.async_read_some(boost::asio::buffer(data_, MAX_LENGTH),
       [this, self](boost::system::error_code ec, std::size_t length)
       {
       if (!ec)
       {
       debugf("do_read got message of length %lu\n", length);
-      do_write(length);
+      process_response(length);
       }
       });
 }
 
-void Session::do_write(std::size_t length)
+void Session::process_response(std::size_t length)
 {
-  auto self(shared_from_this());
-  char *response = (char*) malloc(max_length);
+  std::size_t capped_length = (length > MAX_LENGTH) ? MAX_LENGTH : length;
+  int capped_length_digits = floor(log10(capped_length)) + 1;
+  int response_overhead = strlen(RESPONSE) + capped_length_digits +
+    strlen("text/plain");
+
+  char *response = (char*) malloc(MAX_LENGTH);
   if (response == NULL) {
     debugf("do_write failed to allocate response buffer.\n");
     return;
@@ -30,24 +36,29 @@ void Session::do_write(std::size_t length)
 
   // Apparently boost doesn't care to null terminate its strings, so we
   // have to do it ourselves.
-  if (length < max_length) {
+  if (length < (MAX_LENGTH - response_overhead)) {
     data_[length] = 0;
   } else {
-    // TODO: handle this
-    data_[max_length] = 0;
+    // TODO: handle this. We'll have to send the response back in two parts.
   }
 
-  int response_len = snprintf(response, max_length, RESPONSE,
+  std::size_t response_len = snprintf(response, MAX_LENGTH, RESPONSE,
       length, "text/plain", data_);
 
-  debugf("do_write sending response of length %d\n", response_len);
+  debugf("process_response generated response of length %d\n", response_len);
 
-  if (response_len >= max_length) {
-    // Output was truncated. TODO: handle this
-    debugf("do_write had to truncate response.\n");
-  }
-  boost::asio::async_write(socket_, boost::asio::buffer(response,
-        response_len),
+  do_write(response, response_len);
+  free(response);
+}
+
+void Session::do_write(const char *msg, std::size_t length)
+{
+  auto self(shared_from_this());
+
+  debugf("do_write sending response of length %d\n", length);
+
+  boost::asio::async_write(socket_, boost::asio::buffer(msg,
+        length),
       [this, self](boost::system::error_code ec, std::size_t /*length*/)
       {
       if (!ec)
