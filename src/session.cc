@@ -13,11 +13,10 @@ void Session::do_read()
   socket_.async_read_some(boost::asio::buffer(data_, MAX_LENGTH),
       [this, self](boost::system::error_code ec, std::size_t length)
       {
-      if (!ec)
-      {
-      debugf("do_read got message of length %lu\n", length);
-      process_response(length);
-      }
+        if (!ec) {
+          debugf("do_read got message of length %lu\n", length);
+          process_response(length);
+        }
       });
 }
 
@@ -61,9 +60,8 @@ void Session::do_write(const char *msg, std::size_t length)
         length),
       [this, self](boost::system::error_code ec, std::size_t /*length*/)
       {
-      if (!ec)
-      {
-      do_read();
-      }
+        if (!ec) {
+          do_read();
+        }
       });
 }
