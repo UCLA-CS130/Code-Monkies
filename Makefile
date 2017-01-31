@@ -34,8 +34,12 @@ lib:
 	$(MAKE) -C lib
 
 .PHONY: test
-test: compile lib
+test: compile
 	$(MAKE) -C test
+
+.PHONY: int-test
+int-test: compile
+	scripts/integration.sh
 
 .PHONY: clean
 clean:
