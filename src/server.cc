@@ -4,3 +4,15 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include "server.h"
+
+void Server::do_accept()
+{
+  acceptor_.async_accept(socket_,
+      [this](boost::system::error_code ec)
+      {
+        if (!ec) {
+          std::make_shared<Session>(std::move(socket_))->start();
+        }
+        do_accept();
+      });
+}
