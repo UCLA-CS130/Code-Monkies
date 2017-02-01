@@ -36,6 +36,7 @@ lib:
 .PHONY: test
 test: compile
 	$(MAKE) -C test
+	cd bin && ./webserver_tests
 
 .PHONY: int-test
 int-test: compile
