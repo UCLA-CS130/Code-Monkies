@@ -1,7 +1,7 @@
 #!/bin/sh
 
 CONFIG_FILE="base_config-$(date +'%s')"
-PORT=0
+PORT=8080
 EXIT_STATUS=0
 
 # don't clobber pre-existing files
