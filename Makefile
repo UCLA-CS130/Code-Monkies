@@ -7,7 +7,7 @@
 
 # Project-wide compiler settings.
 export CXX=g++
-export CXXFLAGS=-c --std=c++11 -Wall -Wextra -Werror
+export CXXFLAGS=-c --std=c++0x -Wall -Wextra -Werror
 export LDFLAGS=-lboost_system
 
 # Get directory of this Makefile, AKA the top-level directory of the project.
