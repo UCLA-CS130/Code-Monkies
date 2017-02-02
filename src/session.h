@@ -37,6 +37,10 @@ class Session
       do_read();
     }
 
+    char *get_data() {
+      return data_;
+    }
+
   private:
     /*
      * Read data from the client. On success, write back a response.
