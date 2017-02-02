@@ -3,9 +3,12 @@
 
 #include "config_parser.h"
 #include "server.h"
+#include "helpers.h"
 
 #define USAGE "USAGE: %s config_file_path.\n"
 #define PORT_MAX 65535
+
+using helper::debugf;
 
 int main(int argc, char *argv[])
 {
