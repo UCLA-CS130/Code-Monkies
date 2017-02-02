@@ -7,8 +7,8 @@
 
 # Project-wide compiler settings.
 export CXX=g++
-export CXXFLAGS=-c --std=c++11 -Wall -Wextra -Werror
-export LDFLAGS=-lboost_system
+export CXXFLAGS=-c --std=c++11 -ggdb -Wall -Wextra -Werror -fprofile-arcs -ftest-coverage
+export LDFLAGS=-lgcov --coverage -lboost_system
 
 # Get directory of this Makefile, AKA the top-level directory of the project.
 # Adapted from this stackoverflow post: http://stackoverflow.com/a/18137056
@@ -42,8 +42,13 @@ test: compile
 int-test: compile
 	scripts/integration.sh
 
+.PHONY: gcov
+gcov:  
+	gcov -o $(OBJ_DIR) -r src/*
+
 .PHONY: clean
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C lib clean
+	rm -rf $(OBJ_DIR)/*.gcda $(OBJ_DIR)/*.gcno 

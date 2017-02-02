@@ -16,22 +16,17 @@ using boost::asio::ip::tcp;
  */
 class Server
 {
-  public:
-    Server(boost::asio::io_service& io_service, short port)
-      : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
-      socket_(io_service)
-  {
-    do_accept();
-  }
+public:
+  Server(boost::asio::io_service& io_service, int port);
 
-  private:
-    /*
-     * Allocate session for connection and listen for the next one.
-     */
-    void do_accept();
+private:
+  /*
+   * Allocate session for connection and listen for the next one.
+   */
+  void do_accept();
 
-    tcp::acceptor acceptor_;
-    tcp::socket socket_;
+  tcp::acceptor acceptor_;
+  tcp::socket socket_;
 };
 
 #endif

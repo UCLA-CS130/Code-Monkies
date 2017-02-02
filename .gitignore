@@ -9,3 +9,7 @@
 # Ignore executables
 echo_server
 webserver_tests
+
+# Gcov files
+*.gcno
+*.gcda
