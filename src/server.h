@@ -17,12 +17,7 @@ using boost::asio::ip::tcp;
 class Server
 {
 public:
-  Server(boost::asio::io_service& io_service, short port)
-    : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
-      socket_(io_service)
-  {
-    do_accept();
-  }
+  Server(boost::asio::io_service& io_service, int port);
 
 private:
   /*

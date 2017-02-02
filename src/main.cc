@@ -6,7 +6,6 @@
 #include "helpers.h"
 
 #define USAGE "USAGE: %s config_file_path.\n"
-#define PORT_MAX 65535
 
 using helper::debugf;
 
@@ -34,11 +33,6 @@ int main(int argc, char *argv[])
    */
   int port = std::stoi(config.statements_[0]->tokens_[1]);
   debugf("server port: %d\n", port);
-
-  if (port < 1 || port > PORT_MAX) {
-    fprintf(stderr, "Port %d is out of range\n", port);
-    exit(1);
-  }
 
   try {
     boost::asio::io_service io_service;

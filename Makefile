@@ -7,8 +7,8 @@
 
 # Project-wide compiler settings.
 export CXX=g++
-export CXXFLAGS=-c --std=c++11 -Wall -Wextra -Werror -fprofile-arcs -ftest-coverage
-export LDFLAGS=-lboost_system -lgcov
+export CXXFLAGS=-c --std=c++11 -ggdb -Wall -Wextra -Werror -fprofile-arcs -ftest-coverage
+export LDFLAGS=-lgcov --coverage -lboost_system
 
 # Get directory of this Makefile, AKA the top-level directory of the project.
 # Adapted from this stackoverflow post: http://stackoverflow.com/a/18137056
