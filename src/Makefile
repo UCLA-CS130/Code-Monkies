@@ -1,8 +1,8 @@
 INCLUDES=-I. -I$(PARSER_DIR)
 CXXFLAGS+=$(INCLUDES)
 
-SOURCES=main.cc config_parser.cc server.cc session.cc
-OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(SOURCES)) 
+SOURCES=main.cc config.cc config_parser.cc server.cc session.cc
+OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(SOURCES))
 
 EXECUTABLE=$(BIN_DIR)/echo_server
 
@@ -15,15 +15,22 @@ $(EXECUTABLE): $(OBJECTS)
 $(OBJ_DIR)/main.o: main.cc
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-$(OBJ_DIR)/server.o: server.cc server.h $(OBJ_DIR)/session.o
+$(OBJ_DIR)/config.o: config.cc config.h
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+$(OBJ_DIR)/server.o: server.cc server.h
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 $(OBJ_DIR)/session.o: session.cc session.h
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 .PHONY: debug
-debug: CXXFLAGS+=-g -DDEBUG
+debug: CXXFLAGS+=-DDEBUG -ggdb
 debug: compile
+
+.PHONY: test
+test: CXXFLAGS+=-ggdb -fprofile-arcs -ftest-coverage
+test: compile
 
 .PHONY: clean
 clean:

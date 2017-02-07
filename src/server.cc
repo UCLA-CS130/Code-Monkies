@@ -6,16 +6,10 @@
 #include "server.h"
 #include <iostream>
 
-const int PORT_MAX = 65535;
-
-Server::Server(boost::asio::io_service& io_service, int port)
+Server::Server(boost::asio::io_service& io_service, const short port)
   : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
     socket_(io_service)
-{ 
-  if (port < 1 || port > PORT_MAX) {
-    fprintf(stderr, "Port %d is out of range\n", port);
-    exit(1);
-  }
+{
   this->do_accept();
 }
 
