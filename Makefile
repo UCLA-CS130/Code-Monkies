@@ -7,7 +7,7 @@
 
 # Project-wide compiler settings.
 export CXX=g++
-export CXXFLAGS=-c --std=c++11 -ggdb -Wall -Wextra -Werror -fprofile-arcs -ftest-coverage
+export CXXFLAGS=-c -std=c++11 -Wall -Wextra -Werror
 export LDFLAGS=-lgcov --coverage -lboost_system
 
 # Get directory of this Makefile, AKA the top-level directory of the project.
@@ -34,7 +34,8 @@ lib:
 	$(MAKE) -C lib
 
 .PHONY: test
-test: compile
+test: lib
+	$(MAKE) -C src test
 	$(MAKE) -C test
 	cd bin && ./webserver_tests
 

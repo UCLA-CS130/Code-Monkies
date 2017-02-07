@@ -6,7 +6,7 @@
 #include "session.h"
 #include <math.h>
 
-using helper::debugf;
+using helpers::debugf;
 
 void Session::do_read()
 {
@@ -15,7 +15,8 @@ void Session::do_read()
       [this, self](boost::system::error_code ec, std::size_t length)
       {
         if (!ec) {
-          debugf("do_read got message of length %lu\n", length);
+          debugf("Session::do_read", "do_read got message of length %lu\n",
+            length);
           process_response(length);
         }
       });
@@ -30,7 +31,8 @@ void Session::process_response(std::size_t length)
 
   char *response = (char*) malloc(MAX_LENGTH);
   if (response == NULL) {
-    debugf("do_write failed to allocate response buffer.\n");
+    debugf("Session::process_response", "do_write failed to allocate response "
+        "buffer.\n");
     return;
   }
 
@@ -45,7 +47,8 @@ void Session::process_response(std::size_t length)
   std::size_t response_len = snprintf(response, MAX_LENGTH, RESPONSE,
       length, "text/plain", data_);
 
-  debugf("process_response generated response of length %d\n", response_len);
+  debugf("Session::process_response", "process_response generated response of "
+      "length %d\n", response_len);
 
   do_write(response, response_len);
   free(response);
@@ -55,7 +58,8 @@ void Session::do_write(const char *msg, std::size_t length)
 {
   auto self(shared_from_this());
 
-  debugf("do_write sending response of length %d\n", length);
+  debugf("Session::do_write", "do_write sending response of length %d\n",
+      length);
 
   boost::asio::async_write(socket_, boost::asio::buffer(msg,
         length),
