@@ -3,8 +3,11 @@
 
 #include "config_parser.h"
 #include "server.h"
+#include "helpers.h"
 
 #define USAGE "USAGE: %s config_file_path.\n"
+
+using helper::debugf;
 
 int main(int argc, char *argv[])
 {
@@ -29,7 +32,6 @@ int main(int argc, char *argv[])
    * This will fail gruesomely if anything is trivially different.
    */
   int port = std::stoi(config.statements_[0]->tokens_[1]);
-
   debugf("server port: %d\n", port);
 
   try {

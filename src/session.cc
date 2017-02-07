@@ -4,8 +4,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include "session.h"
-
 #include <math.h>
+
+using helper::debugf;
 
 void Session::do_read()
 {
