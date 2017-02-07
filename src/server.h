@@ -19,7 +19,7 @@ using boost::asio::ip::tcp;
 class Server
 {
 public:
-  Server(boost::asio::io_service& io_service, int port);
+  Server(boost::asio::io_service& io_service, const short port);
 
 private:
   /*

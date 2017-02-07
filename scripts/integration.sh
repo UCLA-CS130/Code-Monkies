@@ -9,7 +9,22 @@ while [ -e $CONFIG_FILE ]; do
   CONFIG_FILE="/tmp/base_config-$(date +'%s')-$RANDOM"
 done
 
-echo "listen $PORT;" > $CONFIG_FILE
+CONFIG=$(cat <<'CONFIG_END'
+server {
+  listen 8080;
+  echo {
+    /echo1;
+    /echo2;
+  }
+  serve {
+    /static1 /var/www/html;
+    /static2 /home/html;
+  }
+}
+CONFIG_END
+)
+
+printf '%s' "$CONFIG" > $CONFIG_FILE
 
 if [ $? -ne 0 ]; then
   echo "Failed to write to config file $CONFIG_FILE - cannot test."

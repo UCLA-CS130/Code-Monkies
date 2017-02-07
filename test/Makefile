@@ -28,7 +28,7 @@ $(EXECUTABLE): $(TEST_OBJECTS) $(SOURCE_OBJECTS) $(TEST_DEP_OBJECTS)
 	$(CXX) $^ $(GTEST_LIBS) -o $@ $(TEST_LDFLAGS)
 
 $(OBJ_DIR)/%.o: %.cc
-	$(CXX) $(CPPFLAGS) $(INCLUDES) $(CXXFLAGS) $< -o $@ 
+	$(CXX) $(CPPFLAGS) $(INCLUDES) $(CXXFLAGS) $< -o $@
 
 # $(OBJ_DIR)/server_test.o: $(TEST_SRC_DIR)/server_test.cc $(SRC_DIR)/server.cc $(SRC_DIR)/session.cc
 # 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(TEST_SRC_DIR) -I$(SRC_DIR) $< -o $@
