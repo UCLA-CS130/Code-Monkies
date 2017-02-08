@@ -5,12 +5,12 @@ using helpers::debugf;
 
 Config::Config(const short port, const std::unordered_set<std::string> &echo_uris,
     const std::unordered_map<std::string, std::string> &file_uri_mappings)
-  : port(port), echo_uris(echo_uris), file_uri_mappings(file_uri_mappings)
+  : port_(port), echo_uris_(echo_uris), file_uri_mappings_(file_uri_mappings)
 {}
 
 ConfigBuilder::ConfigBuilder()
 {
-  port = -1;
+  port_ = -1;
 }
 
 bool ConfigBuilder::build(const NginxConfig &config, Config *&conf)
@@ -102,16 +102,16 @@ bool ConfigBuilder::setPort(int port)
     debugf("ConfigBuilder::setPort", "Port out of range. Port: %d.\n", port);
     return false;
   }
-  this->port = port;
+  port_ = port;
   return true;
 }
 
 bool ConfigBuilder::addEchoUri(std::string uri)
 {
-  auto got = echo_uris.find(uri);
-  if (got == echo_uris.end()) {
+  auto got = echo_uris_.find(uri);
+  if (got == echo_uris_.end()) {
     // TODO error check this
-    echo_uris.emplace(uri);
+    echo_uris_.emplace(uri);
     return true;
   } else {
     debugf("ConfigBuilder::addEchoUri", "Echo URI already specified. URI: "
@@ -122,10 +122,10 @@ bool ConfigBuilder::addEchoUri(std::string uri)
 
 bool ConfigBuilder::addFileUriMapping(std::string uri, std::string path)
 {
-  auto got = file_uri_mappings.find(uri);
-  if (got == file_uri_mappings.end()) {
+  auto got = file_uri_mappings_.find(uri);
+  if (got == file_uri_mappings_.end()) {
     // TODO error check this
-    file_uri_mappings.emplace(uri, path);
+    file_uri_mappings_.emplace(uri, path);
     return true;
   } else {
     debugf("ConfigBuilder::addFileUriMapping", "File URI already specified. "
@@ -136,13 +136,13 @@ bool ConfigBuilder::addFileUriMapping(std::string uri, std::string path)
 
 bool ConfigBuilder::build(Config *&config)
 {
-  if (port == -1) {
+  if (port_ == -1) {
     debugf("ConfigBuilder::build", "Port never set.\n");
     return false;
   }
 
-  config = new (std::nothrow) Config((short) port, echo_uris,
-      file_uri_mappings);
+  config = new (std::nothrow) Config((short) port_, echo_uris_,
+      file_uri_mappings_);
   if (config == NULL) {
     debugf("ConfigBuilder::build", "Failed to allocate config.\n");
     return false;
