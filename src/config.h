@@ -4,12 +4,15 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "config_parser.h"
+
 #define PORT_MAX 65535
 
 class Config {
   public:
     Config(const short port, const std::unordered_set<std::string> &echo_uris,
         const std::unordered_map<std::string, std::string> &file_uri_mappings);
+
     const short port;
     const std::unordered_set<std::string> echo_uris;
     const std::unordered_map<std::string, std::string> file_uri_mappings;
@@ -18,6 +21,14 @@ class Config {
 class ConfigBuilder {
   public:
     ConfigBuilder();
+
+    /*
+     * Given a parsed nginx-style configuration, build a valid server configuration
+     * or return false.
+     */
+    bool build(const NginxConfig &config, Config *&conf);
+
+  private:
 
     /*
      * Set port. Only fail if port is out of the range [1, 65535].
@@ -39,7 +50,6 @@ class ConfigBuilder {
      */
     bool build(Config *&config);
 
-  private:
     int port;
     /*
      * URIs at which the server will simply echo requests, e.g. "/echo".
