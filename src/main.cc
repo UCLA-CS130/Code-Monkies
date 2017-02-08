@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
   try {
     boost::asio::io_service io_service;
-    Server s(io_service, valid_config->port);
+    Server s(io_service, valid_config->port_);
     io_service.run();
   } catch (std::exception &e) {
     fprintf(stderr, "io_service encountered exception: %s\n", e.what());
