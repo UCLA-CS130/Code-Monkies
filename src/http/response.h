@@ -12,6 +12,10 @@ public:
 	Response(int status);
 	virtual ~Response() {};
 	virtual std::string buildFirstLine();
+
+	inline std::string getReason() const { 
+		return reason_; 
+	}
 };
 
 #endif

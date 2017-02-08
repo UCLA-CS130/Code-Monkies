@@ -1,33 +1,40 @@
 TEST_SRC_DIR=$(PROJ_ROOT)/test
 SRC_DIR=$(PROJ_ROOT)/src
 
+INCLUDES=-I$(TEST_SRC_DIR) -I$(SRC_DIR) -I$(SRC_DIR)/http
+
 GTEST_LIBS=$(PROJ_ROOT)/build/gtest.a $(PROJ_ROOT)/build/gtest_main.a
 CPPFLAGS=-isystem $(GTEST_DIR)/include
 CXXFLAGS+=-c
 TEST_LDFLAGS=-pthread -L$(PROJ_ROOT)/build $(LDFLAGS)
 
 # Objects which unit tests depend upon. Required for compiling final binary.
-TEST_DEP_OBJECTS=config_parser.o
+TEST_DEP_OBJECTS=$(OBJ_DIR)/config_parser.o
 
-TEST_SOURCES=server_test.cc session_test.cc
+TEST_SOURCES=$(wildcard *.cc)
 TEST_OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(TEST_SOURCES)) 
 
-SOURCES=server.cc session.cc
-SOURCE_OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(SOURCES)) 
+SOURCES=$(wildcard $(SRC_DIR)/*.cc) $(wildcard $(SRC_DIR)/http/*.cc)
+SOURCES_NO_MAIN=$(filter-out $(SRC_DIR)/main.cc, $(SOURCES))
+SOURCE_OBJECTS=$(patsubst $(SRC_DIR)/%.cc,$(OBJ_DIR)/%.o,$(SOURCES_NO_MAIN)) 
 
 EXECUTABLE=$(BIN_DIR)/webserver_tests
 
 .PHONY: all
 all: $(EXECUTABLE)
 
-$(EXECUTABLE): $(TEST_OBJECTS) $(SOURCE_OBJECTS)
+$(EXECUTABLE): $(TEST_OBJECTS) $(SOURCE_OBJECTS) $(TEST_DEP_OBJECTS)
+	echo $(SOURCE_OBJECTS)
 	$(CXX) $^ $(GTEST_LIBS) -o $@ $(TEST_LDFLAGS)
 
-$(OBJ_DIR)/server_test.o: $(TEST_SRC_DIR)/server_test.cc $(SRC_DIR)/server.cc $(SRC_DIR)/session.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(TEST_SRC_DIR) -I$(SRC_DIR) $< -o $@
+$(OBJ_DIR)/%.o: %.cc
+	$(CXX) $(CPPFLAGS) $(INCLUDES) $(CXXFLAGS) $< -o $@ 
 
-$(OBJ_DIR)/session_test.o: $(TEST_SRC_DIR)/session_test.cc $(SRC_DIR)/session.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(TEST_SRC_DIR) -I$(SRC_DIR) $< -o $@
+# $(OBJ_DIR)/server_test.o: $(TEST_SRC_DIR)/server_test.cc $(SRC_DIR)/server.cc $(SRC_DIR)/session.cc
+# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(TEST_SRC_DIR) -I$(SRC_DIR) $< -o $@
+
+# $(OBJ_DIR)/session_test.o: $(TEST_SRC_DIR)/session_test.cc $(SRC_DIR)/session.cc
+# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(TEST_SRC_DIR) -I$(SRC_DIR) $< -o $@
 
 .PHONY: clean
 clean:

@@ -10,16 +10,16 @@
  */
 class Message {
 protected:
-	// Effectively namespaced constant for carriage returns
-
 	std::vector<std::string> headers_;
 	std::string body_;
 
-	virtual std::string buildFirstLine() = 0;
-
 public:
-	Message() {};
+	Message() : headers_() {};
 	virtual ~Message() {};
+
+	// Virtual definition for the first line of a 
+	// Request or Response
+	virtual std::string buildFirstLine() = 0;
 
 	// Creates the entire HTTP message from the first line, headers, and body
 	// and outputs it as a string.

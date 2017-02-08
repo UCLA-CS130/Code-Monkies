@@ -1,5 +1,5 @@
 language: cpp
-script: make test
+script: make test && make int-test
 addons:
  apt:
    packages:

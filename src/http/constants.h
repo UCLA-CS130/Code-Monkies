@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 /**
  * Non-exhaustive constants file for different HTTP status
@@ -21,8 +22,7 @@ namespace status {
 			case HTTP_200_OK: return "OK";
 			case HTTP_404_NOT_FOUND: return "NOT FOUND";
 			default: 
-				std::cerr << "invalid status code" << std::endl;
-				exit(-1); 
+				throw std::invalid_argument("invalid or unimplemented status code");
 		}
 	}
 } // namespace status

@@ -1,11 +1,20 @@
 #include "http/constants.h"
 #include "http/response.h"
 #include <string>
+#include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 Response::Response(int status) {
 	this->status_ = status;
-	this->reason_ = status::getReasonPhrase(status);
+	try {
+		this->reason_ = status::getReasonPhrase(status);
+	} catch (const std::invalid_argument& e) {
+		std::cerr << status 
+			<< " is not a valid status code for this class" 
+			<< std::endl;
+		exit(1);
+	}
 }
 
 // Response first line uses this format
