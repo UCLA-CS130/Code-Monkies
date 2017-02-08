@@ -1,5 +1,5 @@
-#ifndef STATUS_H
-#define STATUS_H
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
 
 #include <iostream>
 #include <string>
@@ -32,4 +32,4 @@ namespace http {
 	const std::string HTTP_VERSION = "HTTP/1.1";
 } // namespace http
 
-#endif // STATUS_H
+#endif // CONSTANTS_H
