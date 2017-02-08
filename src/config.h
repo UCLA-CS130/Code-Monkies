@@ -13,9 +13,9 @@ class Config {
     Config(const short port, const std::unordered_set<std::string> &echo_uris,
         const std::unordered_map<std::string, std::string> &file_uri_mappings);
 
-    const short port;
-    const std::unordered_set<std::string> echo_uris;
-    const std::unordered_map<std::string, std::string> file_uri_mappings;
+    const short port_;
+    const std::unordered_set<std::string> echo_uris_;
+    const std::unordered_map<std::string, std::string> file_uri_mappings_;
 };
 
 class ConfigBuilder {
@@ -50,18 +50,18 @@ class ConfigBuilder {
      */
     bool build(Config *&config);
 
-    int port;
+    int port_;
     /*
      * URIs at which the server will simply echo requests, e.g. "/echo".
      */
-    std::unordered_set<std::string> echo_uris;
+    std::unordered_set<std::string> echo_uris_;
     /*
      * URI-path pairs at which the server will serve files. For example, the
      * tuple ("/static", "/var/www/html") will cause the server to serve
      * requests like "GET /static/index.html HTTP/1.0" from
      * /var/www/static/index.html.
      */
-    std::unordered_map<std::string, std::string> file_uri_mappings;
+    std::unordered_map<std::string, std::string> file_uri_mappings_;
 };
 
 #endif
