@@ -6,6 +6,8 @@
 #ifndef SERVER_INCLUDED
 #define SERVER_INCLUDED
 
+#include <string>
+#include <vector>
 #include "session.h"
 
 using boost::asio::ip::tcp;
@@ -25,8 +27,12 @@ private:
    */
   void do_accept();
 
+  // Boost TCP fields
   tcp::acceptor acceptor_;
   tcp::socket socket_;
+
+  // Nginx config fields
+  std::string root_dir_;
 };
 
 #endif

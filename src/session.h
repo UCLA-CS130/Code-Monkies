@@ -19,6 +19,15 @@
 
 using boost::asio::ip::tcp;
 
+
+/* Base class for an HTTP session.
+ * 
+ * When the server accepts a client, it creates a Session
+ * that performs the actions that the client requests. The
+ * server config dictates what action the session should perform.
+ * For example, an EchoSession will echo back the request of the 
+ * client in the body of the response.
+ */
 class Session
 : public std::enable_shared_from_this<Session>
 {
@@ -35,10 +44,6 @@ class Session
     void start()
     {
       do_read();
-    }
-
-    char *get_data() {
-      return data_;
     }
 
   private:
