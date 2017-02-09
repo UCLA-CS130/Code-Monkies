@@ -58,7 +58,7 @@ $(OBJ_DIR)/gtest_main.a : $(OBJ_DIR)/gtest_all.o $(OBJ_DIR)/gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
 
 $(OBJ_DIR)/config_parser.o: nginx-configparser/config_parser.cc nginx-configparser/config_parser.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) -c $< -o $@
 
 # src Makefile will clean out .o files.
 .PHONY: clean
