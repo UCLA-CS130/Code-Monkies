@@ -1,6 +1,9 @@
 #include "gtest/gtest.h"
 #include "http/request.h"
+#include "http/constants.h"
 #include <string>
+#include <sstream>
+#include <vector>
 
 class RequestTest : public ::testing::Test {
 public: 
@@ -66,4 +69,30 @@ TEST_F(RequestTest, buildFullRequest) {
 		request_->build(),
 		expectedRequest
 	);
+}
+
+TEST (RequestConsumeTest, ConsumeValidRequest) {
+	std::string firstLine = "GET /path/to/file HTTP/1.1";
+	std::vector<std::string> headers;
+	headers.push_back("Content-Type: text/plain");
+	headers.push_back("Authorization: Bearer abcdefg");
+	std::string body = "{\"key\": 5}";
+
+	std::stringstream validRequestStream;
+	validRequestStream <<
+		firstLine << http::CRLF 
+		<< headers[0] << http::CRLF 
+		<< headers[1] << http::CRLF << http::CRLF 
+		<< body;
+	std::string validRequestString = validRequestStream.str();
+
+	Request r;
+	r.consume(validRequestString);
+
+	std::cout << r.build() << std::endl;
+
+	EXPECT_EQ(r.buildFirstLine(), firstLine);
+	EXPECT_EQ(r.getHeaders()[0], headers[0]);
+	EXPECT_EQ(r.getHeaders()[1], headers[1]);
+	EXPECT_EQ(r.getBody(), body);
 }

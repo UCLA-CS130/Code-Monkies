@@ -13,9 +13,9 @@ public:
 	virtual ~Response() {};
 	virtual std::string buildFirstLine();
 
-	inline std::string getReason() const { 
-		return reason_; 
-	}
+	std::string getReason() const { return reason_; }
+
+	int getStatus() const { return status_; }
 };
 
 #endif

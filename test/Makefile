@@ -1,7 +1,10 @@
 TEST_SRC_DIR=$(PROJ_ROOT)/test
 SRC_DIR=$(PROJ_ROOT)/src
 
-INCLUDES=-I$(TEST_SRC_DIR) -I$(SRC_DIR) -I$(SRC_DIR)/http
+INCLUDES=-I$(TEST_SRC_DIR) \
+		 -I$(SRC_DIR) \
+		 -I$(SRC_DIR)/http \
+		 -I$(SRC_DIR)/handler
 
 GTEST_LIBS=$(PROJ_ROOT)/build/gtest.a $(PROJ_ROOT)/build/gtest_main.a
 CPPFLAGS=-isystem $(GTEST_DIR)/include
@@ -14,7 +17,10 @@ TEST_DEP_OBJECTS=$(OBJ_DIR)/config_parser.o
 TEST_SOURCES=$(wildcard *.cc)
 TEST_OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(TEST_SOURCES)) 
 
-SOURCES=$(wildcard $(SRC_DIR)/*.cc) $(wildcard $(SRC_DIR)/http/*.cc)
+SOURCES=$(wildcard $(SRC_DIR)/*.cc) \
+		$(wildcard $(SRC_DIR)/http/*.cc) \
+		$(wildcard $(SRC_DIR)/handler/*.cc)
+
 SOURCES_NO_MAIN=$(filter-out $(SRC_DIR)/main.cc, $(SOURCES))
 SOURCE_OBJECTS=$(patsubst $(SRC_DIR)/%.cc,$(OBJ_DIR)/%.o,$(SOURCES_NO_MAIN)) 
 
