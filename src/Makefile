@@ -25,11 +25,11 @@ $(OBJ_DIR)/session.o: session.cc session.h
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 .PHONY: debug
-debug: CXXFLAGS+=-DDEBUG -ggdb
+debug: CXXFLAGS+=$(DEBUG_FLAGS)
 debug: compile
 
 .PHONY: test
-test: CXXFLAGS+=-ggdb -fprofile-arcs -ftest-coverage
+test: CXXFLAGS+=$(DEBUG_FLAGS) -fprofile-arcs -ftest-coverage
 test: compile
 
 .PHONY: clean
