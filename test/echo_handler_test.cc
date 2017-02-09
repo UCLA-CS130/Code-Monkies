@@ -41,5 +41,7 @@ TEST_F(EchoRequestHandlerTest, EchoRequest) {
 			 	  handler_.TEXT_PLAIN
 		) != resHeaders.end()
 	);
+
+	EXPECT_EQ(res.getBody(), req.build());
 }
 
