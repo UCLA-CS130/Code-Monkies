@@ -16,14 +16,15 @@ ConfigBuilder::ConfigBuilder()
 bool ConfigBuilder::build(const NginxConfig &config, Config *&conf)
 {
   if (config.statements_.size() != 1) {
-    fprintf(stderr, "Incorrect number of top-level statements in server "
-        "configuration file. Got %lu, expected 1.\n",
+    debugf("ConfigBuilder::build", "Incorrect number of top-level statements "
+        "in server configuration file. Got %lu, expected 1.\n",
         config.statements_.size());
     return false;
   }
 
   if (config.statements_[0]->child_block_ == NULL) {
-    fprintf(stderr, "Expected child block for top-level statement.\n");
+    debugf("ConfigBuilder::build", "Expected child block for top-level "
+        "statement.\n");
     return false;
   }
 
@@ -31,7 +32,7 @@ bool ConfigBuilder::build(const NginxConfig &config, Config *&conf)
       config.statements_[0]->child_block_->statements_) {
     size_t len = statement->tokens_.size();
     if (len == 0) {
-      fprintf(stderr, "Invalid configuration file.\n");
+      debugf("ConfigBuilder::build", "Invalid configuration file.\n");
       return false;
     } else if (len == 1) {
       /*
@@ -40,30 +41,30 @@ bool ConfigBuilder::build(const NginxConfig &config, Config *&conf)
       if (statement->tokens_[0] == "serve") {
         for (auto const& tuple : statement->child_block_->statements_) {
           if (tuple->tokens_.size() != 2) {
-            fprintf(stderr, "Invalid serve tuple: has length %lu, should have "
-                "length 2.\n", tuple->tokens_.size());
+            debugf("ConfigBuilder::build", "Invalid serve tuple: has length "
+                "%lu, should have length 2.\n", tuple->tokens_.size());
             return false;
           }
           if (!addFileUriMapping(tuple->tokens_[0],
                 tuple->tokens_[1])) {
-            fprintf(stderr, "Invalid serve tuple.\n");
+            debugf("ConfigBuilder::build", "Invalid serve tuple.\n");
             return false;
           }
         }
       } else if (statement->tokens_[0] == "echo") {
         for (auto const& uri : statement->child_block_->statements_) {
           if (uri->tokens_.size() != 1) {
-            fprintf(stderr, "Invalid echo URI: received %lu tokens, should "
-                "have received 1.\n", uri->tokens_.size());
+            debugf("ConfigBuilder::build", "Invalid echo URI: received %lu "
+                "tokens, should have received 1.\n", uri->tokens_.size());
             return false;
           }
           if (!addEchoUri(uri->tokens_[0])) {
-            fprintf(stderr, "Invalid serve tuple.\n");
+            debugf("ConfigBuilder::build", "Invalid echo URI.\n");
             return false;
           }
         }
       } else {
-        fprintf(stderr, "Unexpected inner block: %s.\n",
+        debugf("ConfigBuilder::build", "Unexpected inner block: %s.\n",
             statement->tokens_[0].c_str());
         return false;
       }
@@ -73,23 +74,24 @@ bool ConfigBuilder::build(const NginxConfig &config, Config *&conf)
        */
       if (statement->tokens_[0] == "listen") {
         if (!setPort(std::stoi(statement->tokens_[1]))) {
-          fprintf(stderr, "Received invalid port.\n");
+          debugf("ConfigBuilder::build", "Received invalid port.\n");
           return false;
         }
       } else {
-        fprintf(stderr, "Unexpected inner statement: %s.\n",
+        debugf("ConfigBuilder::build", "Unexpected inner statement: %s.\n",
             statement->ToString(0).c_str());
         return false;
       }
     } else {
-      fprintf(stderr, "Unexpected inner statement: %s.\n",
+      debugf("ConfigBuilder::build", "Unexpected inner statement: %s.\n",
           statement->ToString(0).c_str());
       return false;
     }
   }
 
   if (!build(conf)) {
-    fprintf(stderr, "Failed to build valid server configuration.\n");
+    debugf("ConfigBuilder::build", "Failed to build valid server "
+        "configuration.\n");
     return false;
   }
 
@@ -102,14 +104,21 @@ bool ConfigBuilder::setPort(int port)
     debugf("ConfigBuilder::setPort", "Port out of range. Port: %d.\n", port);
     return false;
   }
+  if (port_ != -1) {
+    debugf("ConfigBuilder::setPort", "Cannot set multiple ports. Old port: "
+        "%d, new port: %d.\n", port_, port);
+    return false;
+  }
   port_ = port;
   return true;
 }
 
 bool ConfigBuilder::addEchoUri(std::string uri)
 {
-  auto got = echo_uris_.find(uri);
-  if (got == echo_uris_.end()) {
+  auto have_echo_uri = echo_uris_.find(uri);
+  auto have_serve_uri = file_uri_mappings_.find(uri);
+  if (have_echo_uri == echo_uris_.end() &&
+      have_serve_uri == file_uri_mappings_.end()) {
     // TODO error check this
     echo_uris_.emplace(uri);
     return true;
@@ -122,8 +131,10 @@ bool ConfigBuilder::addEchoUri(std::string uri)
 
 bool ConfigBuilder::addFileUriMapping(std::string uri, std::string path)
 {
-  auto got = file_uri_mappings_.find(uri);
-  if (got == file_uri_mappings_.end()) {
+  auto have_echo_uri = echo_uris_.find(uri);
+  auto have_serve_uri = file_uri_mappings_.find(uri);
+  if (have_echo_uri == echo_uris_.end() &&
+      have_serve_uri == file_uri_mappings_.end()) {
     // TODO error check this
     file_uri_mappings_.emplace(uri, path);
     return true;
