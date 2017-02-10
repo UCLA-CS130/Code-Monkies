@@ -6,14 +6,21 @@
 #include "http/response.h"
 
 // Echos a request with Content-Type: text/plain
-class EchoRequestHandler : public RequestHandler {
-public:
-	const std::string TEXT_PLAIN = "Content-Type: text/plain";
+class EchoRequestHandler : public RequestHandler
+{
+  public:
+    const std::string TEXT_PLAIN = "Content-Type: text/plain";
 
-	EchoRequestHandler() {};
-	virtual ~EchoRequestHandler() {};
+    EchoRequestHandler()
+      : RequestHandler()
+    {
+    }
+    virtual ~EchoRequestHandler() {};
 
-	virtual Response handle(Request request);
+    /*
+     * This method should only fail in out-of-memory conditions.
+     */
+    virtual bool handle(const Request &request, Response *&response);
 };
 
 #endif

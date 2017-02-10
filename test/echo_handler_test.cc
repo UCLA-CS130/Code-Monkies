@@ -27,11 +27,15 @@ public:
 
 TEST_F(EchoRequestHandlerTest, EchoRequest) {
 	Request req = makeValidRequest();
-	Response res = handler_.handle(req);
+  Response *res;
 
-	EXPECT_EQ(res.getStatus(), status::HTTP_200_OK);
+	EXPECT_TRUE(handler_.handle(req, res));
 
-	std::vector<std::string> resHeaders = res.getHeaders();
+  EXPECT_TRUE(res != NULL);
+
+	EXPECT_EQ(res->getStatus(), status::HTTP_200_OK);
+
+	std::vector<std::string> resHeaders = res->getHeaders();
 
 	EXPECT_TRUE(
 		// This makes me miss `TEXT_PLAIN in resHeaders` in python :(
@@ -42,6 +46,6 @@ TEST_F(EchoRequestHandlerTest, EchoRequest) {
 		) != resHeaders.end()
 	);
 
-	EXPECT_EQ(res.getBody(), req.build());
+	EXPECT_EQ(res->getBody(), req.build());
 }
 

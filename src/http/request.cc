@@ -1,19 +1,20 @@
+#include "helpers.h"
 #include "http/constants.h"
 #include "http/request.h"
 #include <string>
 #include <sstream>
 #include <vector>
 
-
+using helpers::debugf;
 
 // Request first line follows this format
 // <Request Method> <Path> <HTTP Version>
 // We do not include the CRLF
-std::string Request::buildFirstLine() {
+std::string Request::buildFirstLine() const {
 	std::stringstream firstLine;
 
-	firstLine << this->method_ << " "
-				 << this->uri_ << " "
+	firstLine << getMethod() << " "
+				 << getUri() << " "
 				 << http::HTTP_VERSION;
 	return firstLine.str();
 }
@@ -52,7 +53,7 @@ void Request::consume(std::string requestString) {
     std::getline(requestStream, body, '\0');
     requestStream.clear();	   
 
-    std::cout << "Consumption complete" << std::endl;
+    debugf("Request::consume", "Consumption complete.\n");
 
     this->setMethod(method);
     this->setUri(uri);

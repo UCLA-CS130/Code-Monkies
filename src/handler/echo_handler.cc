@@ -5,11 +5,13 @@
 #include <string>
 
 // Convert Request to string and dump it in the body
-Response EchoRequestHandler::handle(Request request) {
+bool EchoRequestHandler::handle(const Request &request, Response *&response) {
+  started_handling_ = true;
 	std::string body = request.build();
-	Response response(status::HTTP_200_OK);
-	response.addHeader(TEXT_PLAIN);
-	response.setBody(body);
+	response = new Response(status::HTTP_200_OK);
+	response->addHeader(TEXT_PLAIN);
+	response->setBody(body);
 
-	return response;
+  done_handling_ = true;
+	return true;
 }

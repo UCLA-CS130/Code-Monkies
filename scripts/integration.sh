@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CONFIG_FILE="base_config-$(date +'%s')"
+CONFIG_FILE="/tmp/base_config-$(date +'%s')"
 PORT=8080
 EXIT_STATUS=0
 
@@ -50,7 +50,28 @@ good_response="${good_response}Host: localhost:8080\r\nAccept: */*\r\n\r\n"
 # turn C-style escape sequences into actual carriage returns and newlines
 good_response=$(printf '%b' "$good_response")
 
-response="$(curl --silent -A "Mozilla/4.0" localhost:$PORT)"
+echo "1"
+
+
+response=$(echo $PORT)
+
+echo $response
+
+response="$(echo $PORT)"
+
+echo $response
+
+response="$(echo ${PORT})"
+
+echo $response
+
+response="$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/echo1)"
+
+echo $response
+
+exit 0
+
+echo "2"
 
 if [ "$response" != "$good_response" ]; then
   echo "Test failed - got different response than expected."
@@ -62,6 +83,8 @@ if [ "$response" != "$good_response" ]; then
 else
   echo "Test passed."
 fi
+
+echo "3"
 
 killall echo_server
 

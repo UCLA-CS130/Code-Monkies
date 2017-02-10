@@ -15,58 +15,133 @@ void Session::do_read()
       [this, self](boost::system::error_code ec, std::size_t length)
       {
         if (!ec) {
-          debugf("Session::do_read", "do_read got message of length %lu\n",
+          debugf("Session::do_read", "Got message of length %lu.\n",
             length);
-          process_response(length);
+          process_response();
         }
       });
 }
 
-void Session::process_response(std::size_t length)
+void Session::process_response()
 {
-  std::size_t capped_length = (length > MAX_LENGTH) ? MAX_LENGTH : length;
-  int capped_length_digits = floor(log10(capped_length)) + 1;
-  int response_overhead = strlen(RESPONSE) + capped_length_digits +
-    strlen("text/plain");
+  Request req;
+  req.consume(data_);
+  Response *res;
+  std::string uri = req.getUri();
+  boost::system::error_code ec;
 
-  char *response = (char*) malloc(MAX_LENGTH);
-  if (response == NULL) {
-    debugf("Session::process_response", "do_write failed to allocate response "
-        "buffer.\n");
-    return;
+  // determine whether we have an echo handler or a response handler
+
+  RequestHandler *handler = NULL;
+
+  std::pair<const std::string, std::string> const *longestPrefixMapping = NULL;
+
+  for (auto &echoUri : conf_->echo_uris_) {
+    if (uri == echoUri) { // guaranteed to be true at most once
+      handler = new (std::nothrow) EchoRequestHandler();
+      if (handler == NULL) {
+        goto err;
+      }
+    }
   }
 
-  // Apparently boost doesn't care to null terminate its strings, so we
-  // have to do it ourselves.
-  if (length < (MAX_LENGTH - response_overhead)) {
-    data_[length] = 0;
-  } else {
-    // TODO: handle this. We'll have to send the response back in two parts.
+  /*
+   * We may have multiple choices on where to serve files from when looking
+   * over fileUriMappings. Consider this case:
+   *  serve {
+   *    /static       /var/www/html;
+   *    /static/foo   /opt/html;
+   *  }
+   * If we receive a request asking for /static/foo/index.html, we could match
+   * against the /static URI root and look for the file 'foo/index.html' under
+   * /var/www/html. We could also match against /static/foo and look for the
+   * file 'index.html' under /opt/html. To disambiguate this situation, I've
+   * made a policy decision to match the longest URI root - e.g., in this case,
+   * we would choose /static/foo as the URI root instead of just /static.
+   */
+
+  for (auto &fileUriMapping : conf_->file_uri_mappings_) {
+    if (uri.find(fileUriMapping.first) == 0) {
+      // Match against the mapping with the longest URI root.
+      if (longestPrefixMapping == NULL ||
+          (fileUriMapping.first.length() >
+           longestPrefixMapping->first.length())) {
+        longestPrefixMapping = &fileUriMapping;
+      }
+    }
   }
 
-  std::size_t response_len = snprintf(response, MAX_LENGTH, RESPONSE,
-      length, "text/plain", data_);
+  if (longestPrefixMapping != NULL) {
+    std::string uri_root = longestPrefixMapping->first;
+    std::string root_dir = longestPrefixMapping->second;
+    std::string uri_remainder = uri.substr(uri_root.length(), uri.length());
+    std::string file_path = root_dir + uri_remainder;
+    debugf("Session::process_response", "uri_root: %s\n", uri_root.c_str());
+    debugf("Session::process_response", "root_dir: %s\n", root_dir.c_str());
+    debugf("Session::process_response", "uri_remainder: %s\n",
+        uri_remainder.c_str());
+    debugf("Session::process_response", "file_path: %s\n", file_path.c_str());
+    handler = new (std::nothrow) FileRequestHandler(file_path);
+    if (handler == NULL) {
+      goto err;
+    }
+  }
 
-  debugf("Session::process_response", "process_response generated response of "
-      "length %d\n", response_len);
+  // No URI root matches against the given URI. Return 404.
+  if (handler == NULL) {
+    handler = new (std::nothrow) NotFoundHandler();
+    if (handler == NULL) {
+      goto err;
+    }
+  }
 
-  do_write(response, response_len);
-  free(response);
+  // TODO: I think this writing pattern could potentially fall out of
+  // sequence. Not sure if that's an issue.
+  while (!handler->doneHandling()) {
+    if (!handler->handle(req, res)) {
+      debugf("Session::process_response", "Failed to handle request.\n");
+      break;
+    }
+    do_write(res);
+  }
+
+  if (handler != NULL) {
+    delete handler;
+  }
+
+  socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+  socket_.close();
+
+  return;
+err:
+  if (handler == NULL) {
+    debugf("Session::process_response", "Failed to allocate handler when "
+        "processing request. Cannot serve client.\n");
+  }
 }
 
-void Session::do_write(const char *msg, std::size_t length)
+void Session::do_write(const Response *res)
 {
   auto self(shared_from_this());
 
-  debugf("Session::do_write", "do_write sending response of length %d\n",
-      length);
+  const std::string res_str = res->build();
+  const char *res_cstr = res_str.c_str();
+  size_t len = res_str.length();
 
-  boost::asio::async_write(socket_, boost::asio::buffer(msg,
-        length),
-      [this, self](boost::system::error_code ec, std::size_t /*length*/)
+  debugf("Session::do_write", "do_write sending response of length %d\n",
+      len);
+
+  boost::asio::async_write(socket_, boost::asio::buffer(res_cstr,
+        len),
+      [this, self](boost::system::error_code ec, std::size_t length)
       {
         if (!ec) {
-          do_read();
+          debugf("Session::do_write", "Wrote buffer of length %lu to "
+            "client.\n", length);
+          return;
+        } else {
+          debugf("Session::do_write", "Failed to write buffer to client. Got "
+            "error code: %d: %s.\n", ec.value(), ec.message().c_str());
         }
       });
 }

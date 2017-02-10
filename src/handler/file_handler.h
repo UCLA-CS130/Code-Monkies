@@ -8,23 +8,25 @@
 #include <fstream>
 #include <string>
 
-
 // Request handler for serving a static file
 // File handler can create 200 responses if the file is found
 // or 404 if the file requested is not found
 class FileRequestHandler : public RequestHandler {
 private:
-	std::string root_dir_;
+	const std::string file_path_;
 
 public:
-	FileRequestHandler(const std::string& root_dir) : root_dir_(root_dir) {};
+	FileRequestHandler(const std::string& file_path)
+    : RequestHandler(), file_path_(file_path)
+  {
+  }
 	virtual ~FileRequestHandler() {};
 
 	////
 	// No accessors or mutators needed. Get it right the first time
 	//// 
 
-	virtual Response handle(Request request);
+	virtual bool handle(const Request &request, Response *&response);
 
 	// Helper functions
 	std::string getFileExtension(const std::string& fileName);

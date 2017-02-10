@@ -39,20 +39,22 @@ std::string FileRequestHandler::getContentTypeFromExtension(const std::string& e
 	}
 }
 
-Response FileRequestHandler::handle(Request request) {
+bool FileRequestHandler::handle(const Request &request, Response *&response) {
+  started_handling_ = true;
+
 	// Try to get the file specified by the handler
-	std::string full_path = this->root_dir_ + request.getUri();
 	std::ifstream file;
-	file.open(full_path, std::fstream::in);
+	file.open(file_path_, std::fstream::in);
 
 	// Check if file exists/is available
 	// TODO: Check permissions and throw 403 when appropriate
 	if (!file.is_open()) {
 		std::cerr << "Could not open file " 
-				  << full_path 
+				  << file_path_ 
 				  << std::endl;
-		Response response(status::HTTP_404_NOT_FOUND);
-		return response;
+		response = new Response(status::HTTP_404_NOT_FOUND);
+    done_handling_ = true;
+		return true;
 	}
 
 	// Get the file contents as a string and return it
@@ -61,13 +63,16 @@ Response FileRequestHandler::handle(Request request) {
 	file_sstream << file.rdbuf();	
 	file.close();
 
-	Response response(status::HTTP_200_OK);
+	response = new Response(status::HTTP_200_OK);
 	std::string extension = getFileExtension(request.getUri());
 	std::string contentType = getContentTypeFromExtension(extension);
-	response.addHeader(contentType);
+	response->addHeader(contentType);
 
 	std::string body = file_sstream.str();
-	response.setBody(body);
+	response->setBody(body);
 
-	return response;
+  // TODO support streaming large files
+  done_handling_ = true;
+
+	return true;
 }

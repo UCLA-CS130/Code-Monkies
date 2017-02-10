@@ -19,7 +19,7 @@ using boost::asio::ip::tcp;
 class Server
 {
 public:
-  Server(boost::asio::io_service& io_service, const short port);
+  Server(boost::asio::io_service& io_service, const Config *conf);
 
 private:
   /*
@@ -32,7 +32,7 @@ private:
   tcp::socket socket_;
 
   // Nginx config fields
-  std::string root_dir_;
+  const Config *conf_;
 };
 
 #endif

@@ -45,7 +45,7 @@ test: lib
 	cd bin && ./webserver_tests
 
 .PHONY: int-test
-int-test: compile
+int-test: test
 	scripts/integration.sh
 
 .PHONY: gcov

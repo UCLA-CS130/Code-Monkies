@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <boost/asio.hpp>
 
-#include "config.h"
 #include "server.h"
 #include "helpers.h"
 
@@ -26,6 +25,8 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
+  debugf("main", "Configuration is syntactically valid.\n");
+
   Config *valid_config;
 
   if (!ConfigBuilder().build(config, valid_config)) {
@@ -33,9 +34,13 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
+  debugf("main", "Configuration is semantically valid.\n");
+
+  debugf("main", "Got configuration:\n%s", valid_config->toString().c_str());
+
   try {
     boost::asio::io_service io_service;
-    Server s(io_service, valid_config->port_);
+    Server s(io_service, valid_config);
     io_service.run();
   } catch (std::exception &e) {
     fprintf(stderr, "io_service encountered exception: %s\n", e.what());

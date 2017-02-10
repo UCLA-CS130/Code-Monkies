@@ -10,8 +10,15 @@
 
 class Config {
   public:
-    Config(const short port, const std::unordered_set<std::string> &echo_uris,
-        const std::unordered_map<std::string, std::string> &file_uri_mappings);
+    Config(const short port,
+        const std::unordered_set<std::string> &echo_uris,
+        const std::unordered_map<std::string, std::string>
+          &file_uri_mappings)
+      : port_(port), echo_uris_(echo_uris), file_uri_mappings_(file_uri_mappings)
+    {
+    }
+
+    std::string toString() const;
 
     const short port_;
     const std::unordered_set<std::string> echo_uris_;

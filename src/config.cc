@@ -1,12 +1,25 @@
 #include "config.h"
 #include "helpers.h"
 
+#include <sstream>
+
 using helpers::debugf;
 
-Config::Config(const short port, const std::unordered_set<std::string> &echo_uris,
-    const std::unordered_map<std::string, std::string> &file_uri_mappings)
-  : port_(port), echo_uris_(echo_uris), file_uri_mappings_(file_uri_mappings)
-{}
+std::string Config::toString() const
+{
+  std::ostringstream out;
+  out << "port: " << port_ << std::endl;
+  out << "echo uris:" << std::endl;
+  for (auto const& uri : echo_uris_) {
+    out << "  " << uri << std::endl;
+  }
+  out << "file uri mappings:" << std::endl;
+  for (auto const& file_uri_mapping : file_uri_mappings_) {
+    out << "  " << file_uri_mapping.first;
+    out << " -> " << file_uri_mapping.second << std::endl;
+  }
+  return out.str();
+}
 
 ConfigBuilder::ConfigBuilder()
 {

@@ -20,7 +20,7 @@ Response::Response(int status) {
 // Response first line uses this format
 // <HTTP Ver> <Status Code> <Reason>
 // We do not include the CRLF
-std::string Response::buildFirstLine() {
+std::string Response::buildFirstLine() const {
 	std::stringstream firstLine;
 
 	firstLine << http::HTTP_VERSION << " "
