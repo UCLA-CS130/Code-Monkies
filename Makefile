@@ -7,8 +7,13 @@
 
 # Project-wide compiler settings.
 export CXX=g++
-export CXXFLAGS=-c --std=c++11 -ggdb -Wall -Wextra -Werror -fprofile-arcs -ftest-coverage
+export CXXFLAGS=-c -std=c++11 -Wall -Wextra -Werror
 export LDFLAGS=-lgcov --coverage -lboost_system
+export DEBUG_FLAGS=-DDEBUG -g
+
+ifdef VERBOSE
+	export DEBUG_FLAGS+=-DDEBUG_VERBOSE
+endif
 
 # Get directory of this Makefile, AKA the top-level directory of the project.
 # Adapted from this stackoverflow post: http://stackoverflow.com/a/18137056
@@ -34,16 +39,17 @@ lib:
 	$(MAKE) -C lib
 
 .PHONY: test
-test: compile
+test: lib
+	$(MAKE) -C src test
 	$(MAKE) -C test
 	cd bin && ./webserver_tests
 
 .PHONY: int-test
-int-test: compile
+int-test: test
 	scripts/integration.sh
 
 .PHONY: gcov
-gcov:  
+gcov:
 	gcov -o $(OBJ_DIR) -r src/*
 
 .PHONY: clean
@@ -51,4 +57,4 @@ clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C lib clean
-	rm -rf $(OBJ_DIR)/*.gcda $(OBJ_DIR)/*.gcno 
+	rm -rf $(OBJ_DIR)/*.gcda $(OBJ_DIR)/*.gcno

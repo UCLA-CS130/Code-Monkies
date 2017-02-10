@@ -20,7 +20,7 @@
 CPPFLAGS += -isystem $(GTEST_DIR)/include
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra -Werror -pthread
+CXXFLAGS += -g -pthread
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -44,11 +44,11 @@ GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
 # conservative and not optimized.  This is fine as Google Test
 # compiles fast and for ordinary users its source rarely changes.
 $(OBJ_DIR)/gtest_all.o : $(GTEST_SRCS_)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
+	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) \
             $(GTEST_DIR)/src/gtest-all.cc -o $@
 
 $(OBJ_DIR)/gtest_main.o : $(GTEST_SRCS_)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
+	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) \
             $(GTEST_DIR)/src/gtest_main.cc -o $@
 
 $(OBJ_DIR)/gtest.a : $(OBJ_DIR)/gtest_all.o
@@ -58,7 +58,7 @@ $(OBJ_DIR)/gtest_main.a : $(OBJ_DIR)/gtest_all.o $(OBJ_DIR)/gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
 
 $(OBJ_DIR)/config_parser.o: nginx-configparser/config_parser.cc nginx-configparser/config_parser.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) -c $< -o $@
 
 # src Makefile will clean out .o files.
 .PHONY: clean

@@ -11,11 +11,11 @@ protected:
 public:
 	Response(int status);
 	virtual ~Response() {};
-	virtual std::string buildFirstLine();
+	virtual std::string buildFirstLine() const;
 
-	inline std::string getReason() const { 
-		return reason_; 
-	}
+	std::string getReason() const { return reason_; }
+
+	int getStatus() const { return status_; }
 };
 
 #endif

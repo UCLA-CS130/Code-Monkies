@@ -13,10 +13,21 @@ protected:
 	std::string uri_;
 
 public:
+	Request() {}
 	Request(std::string method, std::string uri)
 		: method_(method), uri_(uri) {}
 	virtual ~Request() {};
-	virtual std::string buildFirstLine();
+	virtual std::string buildFirstLine() const;
+
+	std::string getUri() const { return uri_; }
+	std::string getMethod() const { return method_; }
+	
+	void setUri(std::string uri) { uri_ = uri; }
+	void setMethod(std::string method) { method_ = method; }
+
+	// Consumes a request string and sets the fields of the 
+	// Request object
+	void consume(std::string requestString);
 };
 
 #endif

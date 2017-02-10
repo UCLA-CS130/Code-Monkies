@@ -4,18 +4,16 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include "server.h"
+#include "helpers.h"
 #include <iostream>
 
-const int PORT_MAX = 65535;
+using helpers::debugf;
 
-Server::Server(boost::asio::io_service& io_service, int port)
-  : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
-    socket_(io_service)
-{ 
-  if (port < 1 || port > PORT_MAX) {
-    fprintf(stderr, "Port %d is out of range\n", port);
-    exit(1);
-  }
+Server::Server(boost::asio::io_service& io_service, const Config *conf)
+  : acceptor_(io_service, tcp::endpoint(tcp::v4(), conf->port_)),
+    socket_(io_service), conf_(conf)
+{
+  debugf("Server::Server", "Server successfully instantiated.\n");
   this->do_accept();
 }
 
@@ -28,7 +26,8 @@ void Server::do_accept()
       		std::cerr << ec.message() << std::endl;
       		exit(-1);
         }
-        std::make_shared<Session>(std::move(socket_))->start();
+        debugf("Server::do_accept", "Accepted new connection.\n");
+        std::make_shared<Session>(std::move(socket_), conf_)->start();
       	this->do_accept();
       });
 }

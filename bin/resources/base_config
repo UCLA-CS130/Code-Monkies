@@ -1,1 +1,9 @@
-listen 8080;
+server {
+  listen 8080;
+  echo {
+    /echo;
+  }
+  serve {
+    /static /opt/static;
+  }
+}

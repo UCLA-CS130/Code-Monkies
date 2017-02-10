@@ -1,13 +1,12 @@
 #include <cstdlib>
 #include <boost/asio.hpp>
 
-#include "config_parser.h"
 #include "server.h"
 #include "helpers.h"
 
 #define USAGE "USAGE: %s config_file_path.\n"
 
-using helper::debugf;
+using helpers::debugf;
 
 int main(int argc, char *argv[])
 {
@@ -16,7 +15,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  debugf("conf file: %s\n", argv[1]);
+  debugf("main", "conf file: %s\n", argv[1]);
 
   NginxConfigParser parser;
   NginxConfig config;
@@ -26,17 +25,22 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  /*
-   * TODO: rewrite this in a more resilient/extensible way.
-   * Right now we assume that the config file looks like "somestring 80;".
-   * This will fail gruesomely if anything is trivially different.
-   */
-  int port = std::stoi(config.statements_[0]->tokens_[1]);
-  debugf("server port: %d\n", port);
+  debugf("main", "Configuration is syntactically valid.\n");
+
+  Config *valid_config;
+
+  if (!ConfigBuilder().build(config, valid_config)) {
+    fprintf(stderr, "Failed to build valid server configuration.\n");
+    exit(1);
+  }
+
+  debugf("main", "Configuration is semantically valid.\n");
+
+  debugf("main", "Got configuration:\n%s", valid_config->toString().c_str());
 
   try {
     boost::asio::io_service io_service;
-    Server s(io_service, port);
+    Server s(io_service, valid_config);
     io_service.run();
   } catch (std::exception &e) {
     fprintf(stderr, "io_service encountered exception: %s\n", e.what());

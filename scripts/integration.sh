@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CONFIG_FILE="base_config-$(date +'%s')"
+CONFIG_FILE="/tmp/base_config-$(date +'%s')"
 PORT=8080
 EXIT_STATUS=0
 
@@ -9,7 +9,22 @@ while [ -e $CONFIG_FILE ]; do
   CONFIG_FILE="/tmp/base_config-$(date +'%s')-$RANDOM"
 done
 
-echo "listen $PORT;" > $CONFIG_FILE
+CONFIG=$(cat <<'CONFIG_END'
+server {
+  listen 8080;
+  echo {
+    /echo1;
+    /echo2;
+  }
+  serve {
+    /static1 /var/www/html;
+    /static2 /home/html;
+  }
+}
+CONFIG_END
+)
+
+printf '%s' "$CONFIG" > $CONFIG_FILE
 
 if [ $? -ne 0 ]; then
   echo "Failed to write to config file $CONFIG_FILE - cannot test."
@@ -35,7 +50,28 @@ good_response="${good_response}Host: localhost:8080\r\nAccept: */*\r\n\r\n"
 # turn C-style escape sequences into actual carriage returns and newlines
 good_response=$(printf '%b' "$good_response")
 
-response="$(curl --silent -A "Mozilla/4.0" localhost:$PORT)"
+echo "1"
+
+
+response=$(echo $PORT)
+
+echo $response
+
+response="$(echo $PORT)"
+
+echo $response
+
+response="$(echo ${PORT})"
+
+echo $response
+
+response="$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/echo1)"
+
+echo $response
+
+exit 0
+
+echo "2"
 
 if [ "$response" != "$good_response" ]; then
   echo "Test failed - got different response than expected."
@@ -47,6 +83,8 @@ if [ "$response" != "$good_response" ]; then
 else
   echo "Test passed."
 fi
+
+echo "3"
 
 killall echo_server
 

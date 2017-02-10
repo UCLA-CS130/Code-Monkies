@@ -19,11 +19,11 @@ public:
 
 	// Virtual definition for the first line of a 
 	// Request or Response
-	virtual std::string buildFirstLine() = 0;
+	virtual std::string buildFirstLine() const = 0;
 
 	// Creates the entire HTTP message from the first line, headers, and body
 	// and outputs it as a string.
-	std::string build();
+	std::string build() const;
 
 	// Basic accessors
 	std::vector<std::string> getHeaders() const;

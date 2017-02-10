@@ -8,7 +8,14 @@
 
 #include <boost/asio.hpp>
 
+#include "config.h"
 #include "helpers.h"
+#include "handler/handler.h"
+#include "handler/echo_handler.h"
+#include "handler/file_handler.h"
+#include "handler/not_found_handler.h"
+#include "http/response.h"
+#include "http/request.h"
 
 #define RESPONSE "HTTP/1.1 200 OK\r\n"\
   "Content-Length: %lu\r\n"\
@@ -32,8 +39,8 @@ class Session
 : public std::enable_shared_from_this<Session>
 {
   public:
-    Session(tcp::socket socket)
-      : socket_(std::move(socket))
+    Session(tcp::socket socket, const Config *conf)
+      : socket_(std::move(socket)), conf_(conf)
     {
     }
 
@@ -56,14 +63,16 @@ class Session
      * Process data received from the client, and choose the appropriate
      * response handler. For now this just calls do_write.
      */
-    void process_response(std::size_t length);
+    void process_response();
 
     /*
-     * Write msg to the client. On success, listen for more data.
+     * Write msg to the client.
+     * This is a best-effort function. Failure and success look the same.
      */
-    void do_write(const char *msg, std::size_t length);
+    void do_write(const Response *res);
 
     tcp::socket socket_;
+    const Config *conf_;
     static const std::size_t MAX_LENGTH = 65536;
     char data_[MAX_LENGTH];
 };

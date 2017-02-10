@@ -4,7 +4,7 @@
 #include <string>
 #include <sstream>
 
-std::string Message::build() {
+std::string Message::build() const {
 	// Stringstream to stream string parts into
 	std::stringstream message;
 
