@@ -11,6 +11,7 @@ using helpers::debugf;
 void Session::do_read()
 {
   auto self(shared_from_this());
+  // TODO: what if the client sends us > 64 KB?
   socket_.async_read_some(boost::asio::buffer(data_, MAX_LENGTH),
       [this, self](boost::system::error_code ec, std::size_t length)
       {
@@ -60,13 +61,15 @@ void Session::process_response()
    * we would choose /static/foo as the URI root instead of just /static.
    */
 
-  for (auto &fileUriMapping : conf_->file_uri_mappings_) {
-    if (uri.find(fileUriMapping.first) == 0) {
-      // Match against the mapping with the longest URI root.
-      if (longestPrefixMapping == NULL ||
-          (fileUriMapping.first.length() >
-           longestPrefixMapping->first.length())) {
-        longestPrefixMapping = &fileUriMapping;
+  if (handler == NULL) {
+    for (auto &fileUriMapping : conf_->file_uri_mappings_) {
+      if (uri.find(fileUriMapping.first) == 0) {
+        // Match against the mapping with the longest URI root.
+        if (longestPrefixMapping == NULL ||
+            (fileUriMapping.first.length() >
+             longestPrefixMapping->first.length())) {
+          longestPrefixMapping = &fileUriMapping;
+        }
       }
     }
   }

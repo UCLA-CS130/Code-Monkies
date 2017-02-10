@@ -9,6 +9,9 @@ bool NotFoundHandler::handle(const Request&, Response *&response) {
   started_handling_ = true;
   // TODO null check allocation
 	response = new (std::nothrow) Response(status::HTTP_404_NOT_FOUND);
+	response->addHeader(TEXT_PLAIN);
+  std::string body = "404: File not found.\n";
+	response->setBody(body);
 
   done_handling_ = true;
 	return true;
