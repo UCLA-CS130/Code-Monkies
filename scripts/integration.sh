@@ -45,33 +45,12 @@ fi
 # run server in background
 bin/echo_server $CONFIG_FILE 2>&1 >/dev/null &
 
-good_response="GET / HTTP/1.1\r\nUser-Agent: Mozilla/4.0\r\n"
+good_response="GET /echo1 HTTP/1.1\r\nUser-Agent: Mozilla/4.0\r\n"
 good_response="${good_response}Host: localhost:8080\r\nAccept: */*\r\n\r\n"
 # turn C-style escape sequences into actual carriage returns and newlines
 good_response=$(printf '%b' "$good_response")
 
-echo "1"
-
-
-response=$(echo $PORT)
-
-echo $response
-
-response="$(echo $PORT)"
-
-echo $response
-
-response="$(echo ${PORT})"
-
-echo $response
-
 response="$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/echo1)"
-
-echo $response
-
-exit 0
-
-echo "2"
 
 if [ "$response" != "$good_response" ]; then
   echo "Test failed - got different response than expected."
@@ -83,8 +62,6 @@ if [ "$response" != "$good_response" ]; then
 else
   echo "Test passed."
 fi
-
-echo "3"
 
 killall echo_server
 
