@@ -4,3 +4,6 @@
 [submodule "lib/nginx-configparser"]
 	path = lib/nginx-configparser
 	url = https://github.com/ahesselgrave/nginx-configparser
+[submodule "lib/api"]
+	path = lib/api
+	url = https://github.com/UCLA-CS130/webserver-api
