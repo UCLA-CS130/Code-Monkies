@@ -25,7 +25,6 @@ export BIN_DIR=$(PROJ_ROOT)/bin
 
 export GTEST_DIR=$(PROJ_ROOT)/lib/googletest/googletest
 export PARSER_DIR=$(PROJ_ROOT)/lib/nginx-configparser
-export API_DIR=$(PROJ_ROOT)/lib/api
 
 .PHONY: compile
 compile: lib

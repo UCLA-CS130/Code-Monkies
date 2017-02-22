@@ -1,4 +1,4 @@
-INCLUDES=-I. -I$(PARSER_DIR) -Ihttp -I$(GTEST_DIR)/include -I$(API_DIR)
+INCLUDES=-I. -I$(PARSER_DIR) -Ihttp -I$(GTEST_DIR)/include
 CXXFLAGS+=$(INCLUDES)
 
 CC_SOURCES=$(wildcard *.cc) \
