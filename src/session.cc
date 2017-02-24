@@ -25,10 +25,10 @@ void Session::do_read()
 
 void Session::process_response()
 {
-  Request req;
-  req.consume(data_);
+  auto req = Request::Parse(data_);
+
   Response *res;
-  std::string uri = req.getUri();
+  std::string uri = req->uri();
   boost::system::error_code ec;
 
   // determine whether we have an echo handler or a response handler
@@ -123,11 +123,11 @@ err:
   }
 }
 
-void Session::do_write(const Response *res)
+void Session::do_write(Response *res)
 {
   auto self(shared_from_this());
 
-  const std::string res_str = res->build();
+  const std::string res_str = res->ToString();
   const char *res_cstr = res_str.c_str();
   size_t len = res_str.length();
 

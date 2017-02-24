@@ -1,7 +1,4 @@
 #include "handler/file_handler.h"
-#include "http/request.h"
-#include "http/response.h"
-#include "http/constants.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -17,29 +14,29 @@ std::string FileRequestHandler::getFileExtension(const std::string& fileName)
     return "";
 }
 
-std::string FileRequestHandler::getContentTypeFromExtension(const std::string& extension) {
+Header FileRequestHandler::getContentTypeFromExtension(const std::string& extension) {
 	// TODO: Make a singleton map of FileExtension -> ContentType;
 	static const std::string jpg =  "jpg", 
 							 png =  "png",
 							 html = "html";
-	static const std::string image_jpeg = "Content-Type: image/jpeg",
-							 image_png =  "Content-Type: image/png",
-		 					 text_html =  "Content-Type: text/html",
-		 					 text_plain = "Content-Type: text/plain";
+	static const std::string image_jpeg = "image/jpeg",
+							 image_png =  "image/png",
+		 					 text_html =  "text/html",
+		 					 text_plain = "text/plain";
 
 	// Images should be "Content-Type: application/image"						 
 	if (extension.compare(jpg) == 0) {
-		return image_jpeg;
+		return std::make_pair("Content-Type", image_jpeg);
 	} else if (extension.compare(png) == 0) {
-		return image_png;
+		return std::make_pair("Content-Type", image_png);
 	} else if (extension.compare(html) == 0) {
-		return text_html;
+		return std::make_pair("Content-Type", text_html);
 	} else {  // Default, just assume it is plaintext	
-		return text_plain;
+		return std::make_pair("Content-Type", text_plain);
 	}
 }
 
-bool FileRequestHandler::handle(const Request &request, Response *&response) {
+bool FileRequestHandler::handle(const std::unique_ptr<Request> &request, Response *&response) {
   started_handling_ = true;
 
 	// Try to get the file specified by the handler
@@ -52,7 +49,8 @@ bool FileRequestHandler::handle(const Request &request, Response *&response) {
 		std::cerr << "Could not open file " 
 				  << file_path_ 
 				  << std::endl;
-		response = new Response(status::HTTP_404_NOT_FOUND);
+		response = new Response();
+		response->SetStatus(Response::ResponseCode::HTTP_404_NOT_FOUND);
     done_handling_ = true;
 		return true;
 	}
@@ -63,16 +61,17 @@ bool FileRequestHandler::handle(const Request &request, Response *&response) {
 	file_sstream << file.rdbuf();	
 	file.close();
 
-	response = new Response(status::HTTP_200_OK);
-	std::string extension = getFileExtension(request.getUri());
-	std::string contentType = getContentTypeFromExtension(extension);
-	response->addHeader(contentType);
+	response = new Response();
+	response->SetStatus(Response::ResponseCode::HTTP_200_OK);
+	std::string extension = getFileExtension(request->uri());
+	auto contentType = getContentTypeFromExtension(extension);
+	response->AddHeader(contentType);
 
 	std::string body = file_sstream.str();
-	response->setBody(body);
+	response->SetBody(body);
 
-  // TODO support streaming large files
-  done_handling_ = true;
+  	// TODO support streaming large files
+  	done_handling_ = true;
 
 	return true;
 }

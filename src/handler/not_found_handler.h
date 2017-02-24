@@ -7,12 +7,10 @@
 class NotFoundHandler : public RequestHandler
 {
   public:
-    const std::string TEXT_PLAIN = "Content-Type: text/plain";
-
     NotFoundHandler() {};
     virtual ~NotFoundHandler() {};
 
-    virtual bool handle(const Request&, Response *&response);
+    virtual bool handle(const std::unique_ptr<Request> &request, Response *&response);
 };
 
 #endif

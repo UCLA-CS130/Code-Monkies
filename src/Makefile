@@ -2,7 +2,7 @@ INCLUDES=-I. -I$(PARSER_DIR) -Ihttp -I$(GTEST_DIR)/include
 CXXFLAGS+=$(INCLUDES)
 
 CC_SOURCES=$(wildcard *.cc) \
-		   $(wildcard http/*.cc) \
+		   $(wildcard api/*.cc) \
    		   $(wildcard handler/*.cc)
 
 OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(CC_SOURCES))

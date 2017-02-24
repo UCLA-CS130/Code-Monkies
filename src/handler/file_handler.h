@@ -2,8 +2,6 @@
 #define FILE_HANDLER_H
 
 #include "handler/handler.h"
-#include "http/request.h"
-#include "http/response.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -26,11 +24,11 @@ public:
 	// No accessors or mutators needed. Get it right the first time
 	//// 
 
-	virtual bool handle(const Request &request, Response *&response);
+	virtual bool handle(const std::unique_ptr<Request> &request, Response *&response);
 
 	// Helper functions
 	std::string getFileExtension(const std::string& fileName);
-	std::string getContentTypeFromExtension(const std::string& extension);
+	Header getContentTypeFromExtension(const std::string& extension);
 };
 
 #endif

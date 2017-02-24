@@ -5,8 +5,8 @@
  * All handler base classes live here.
  */
 
-#include "http/request.h"
-#include "http/response.h"
+#include "api/request.h"
+#include "api/response.h"
 
 // Abstract base Handler for server
 // It createes a Response based on the Request and type of Handler
@@ -18,7 +18,7 @@ class RequestHandler
     {
     }
     // Function for handler to execute when called
-    virtual bool handle(const Request &request, Response *&response) = 0;
+    virtual bool handle(const std::unique_ptr<Request> &request, Response *&response) = 0;
     virtual bool doneHandling() { return done_handling_; };
     virtual ~RequestHandler() {};
   protected:
