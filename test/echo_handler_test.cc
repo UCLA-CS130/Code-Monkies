@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-class EchoRequestHandlerTest : public ::testing::Test {
+class EchoHandlerTest : public ::testing::Test {
 public:
-	EchoRequestHandler handler_;
+	EchoHandler handler_;
 	const std::string method_ = "GET";
 	const std::string uri_ = "/path/to/some_file";
 	const Header header_ = std::make_pair("Content-Type", "text/plain");
@@ -24,29 +24,27 @@ public:
 
 };
 
-TEST_F(EchoRequestHandlerTest, EchoRequest) {
+TEST_F(EchoHandlerTest, EchoRequest) {
 	auto req = makeValidRequest();
- 	Response *res;
+ 	Response res;
 
-	EXPECT_TRUE(handler_.handle(req, res));
-
-	EXPECT_TRUE(res != NULL);
+	handler_.HandleRequest(*(std::move(req)), &res);
 
 	EXPECT_EQ(
-		res->status(), 
+		res.status(), 
 		Response::ResponseCode::HTTP_200_OK
 	);
 
 	EXPECT_EQ(
-		req->headers()[0].first,
+		res.headers()[0].first,
 		"Content-Type"
 	);
 
 	EXPECT_EQ(
-		req->headers()[0].second,
+		res.headers()[0].second,
 		"text/plain"
 	);
 
-	EXPECT_EQ(res->body(), req->raw_request());
+	EXPECT_EQ(res.body(), req->raw_request());
 }
 

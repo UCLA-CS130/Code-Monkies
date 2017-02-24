@@ -16,20 +16,20 @@ public:
 	}
 };
 
-TEST_F(ResponseTest, buildRequestNoHeadersNoBody) {
+TEST_F(ResponseTest, buildResponseNoHeadersNoBody) {
 	// We expect a carriage return to end the 
 	// empty headers and a carriage return to separate 
 	// the empty body
-	std::string expectedRequest = "HTTP/1.1 200 OK\r\n\r\n";
+	std::string expectedResponse = "HTTP/1.1 200 OK\r\n\r\n";
 
 	EXPECT_EQ(
 		response_->ToString(),
-		expectedRequest
+		expectedResponse
 	);
 }
 
-TEST_F(ResponseTest, buildRequestSomeHeadersNoBody) {
-	std::string expectedRequest = \
+TEST_F(ResponseTest, buildResponseSomeHeadersNoBody) {
+	std::string expectedResponse = \
 		"HTTP/1.1 200 OK\r\n"
 		"Content-Type: application/json\r\n"
 		"Cache-Control: max-age=60\r\n\r\n";
@@ -39,12 +39,12 @@ TEST_F(ResponseTest, buildRequestSomeHeadersNoBody) {
 
 	EXPECT_EQ(
 		response_->ToString(),
-		expectedRequest
+		expectedResponse
 	);
 }
 
-TEST_F(ResponseTest, buildFullRequest) {
-	std::string expectedRequest = \
+TEST_F(ResponseTest, buildFullResponse) {
+	std::string expectedResponse = \
 		"HTTP/1.1 200 OK\r\n"
 		"Content-Type: application/json\r\n"
 		"Cache-Control: max-age=60\r\n\r\n"
@@ -56,6 +56,6 @@ TEST_F(ResponseTest, buildFullRequest) {
 
 	EXPECT_EQ(
 		response_->ToString(),
-		expectedRequest
+		expectedResponse
 	);
 }

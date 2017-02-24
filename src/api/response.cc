@@ -4,21 +4,20 @@
 
 std::string Response::status_message_from_code(const ResponseCode& response_code) {
 	switch (response_code) {
-		case ResponseCode::HTTP_200_OK: return "OK";
-		case ResponseCode::HTTP_302_FOUND: return "FOUND";
-		case ResponseCode::HTTP_404_NOT_FOUND: return "NOT_FOUND";
+		case ResponseCode::HTTP_200_OK: return "200 OK";
+		case ResponseCode::HTTP_302_FOUND: return "302 FOUND";
+		case ResponseCode::HTTP_404_NOT_FOUND: return "404 NOT_FOUND";
 		default:
 			throw std::invalid_argument("Invalid or unimplemented response code");
 	}
 }
 
-std::string Response::ToString() {
+std::string Response::ToString() const {
 	// Stringstream to stream string parts into
 	std::stringstream raw_response_string;
 
 	raw_response_string \
 		<< version_ << " "
-		<< status_ << " "
 		<< status_message_;
 
 	// Add carriage return before each header

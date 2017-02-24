@@ -34,7 +34,7 @@ fi
 # cd into directory of script, then out 1 dir to get to top level of project
 cd $(dirname $0) && cd ..
 
-if ! [ -e "bin/echo_server" ]; then
+if ! [ -e "bin/webserver" ]; then
   make
   if [ $? -ne 0 ]; then
     echo "Build failed - cannot test."
@@ -43,7 +43,7 @@ if ! [ -e "bin/echo_server" ]; then
 fi
 
 # run server in background
-bin/echo_server $CONFIG_FILE 2>&1 >/dev/null &
+bin/webserver $CONFIG_FILE 2>&1 >/dev/null &
 
 good_response="GET /echo1 HTTP/1.1\r\nUser-Agent: Mozilla/4.0\r\n"
 good_response="${good_response}Host: localhost:8080\r\nAccept: */*\r\n\r\n"
@@ -63,7 +63,7 @@ else
   echo "Test passed."
 fi
 
-killall echo_server
+killall webserver
 
 rm $CONFIG_FILE
 

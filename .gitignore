@@ -7,7 +7,7 @@
 *.a
 
 # Ignore executables
-echo_server
+webserver
 webserver_tests
 
 # Gcov files

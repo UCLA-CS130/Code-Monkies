@@ -8,7 +8,7 @@ CC_SOURCES=$(wildcard *.cc) \
 OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(CC_SOURCES))
 DEPS=$(OBJ_DIR)/config_parser.o
 
-EXECUTABLE=$(BIN_DIR)/echo_server
+EXECUTABLE=$(BIN_DIR)/webserver
 
 .PHONY: compile
 compile: $(EXECUTABLE)

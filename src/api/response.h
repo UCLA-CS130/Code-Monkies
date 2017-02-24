@@ -58,7 +58,7 @@ public:
         body_ = body;
     }
     
-    std::string ToString();
+    std::string ToString() const;
 
 private:
     std::string version_;

@@ -1,20 +1,27 @@
 #include "handler/not_found_handler.h"
 #include <string>
 
-// Convert Request to string and dump it in the body
-bool NotFoundHandler::handle(const std::unique_ptr<Request> &request, Response *&response) {
-	// Ignore unused error
-	(void) request;
+RequestHandler::Status NotFoundHandler::Init(const std::string& uri_prefix,
+            const NginxConfig& config) {
+    // Does not actually need any information
+    // to be initialized. We void cast the 
+    // arguments to prevent W-unused-variable 
+    // and W-error from getting mad
+    (void) uri_prefix;
+    (void) config;
 
-  	started_handling_ = true;
+    return RequestHandler::Status::OK;
+}
 
-  	// TODO null check allocation
-	response = new (std::nothrow) Response();
-	response->SetStatus(Response::ResponseCode::HTTP_404_NOT_FOUND);
-	response->AddHeader("Content-Type", "text/plain");
-  	std::string body = "404: File not found.\n";
-	response->SetBody(body);
+RequestHandler::Status NotFoundHandler::HandleRequest(const Request& request,
+                     Response* response) {
+    // Don't need request for this
+    (void) request;
 
-  	done_handling_ = true;
-	return true;
+    response->SetStatus(Response::ResponseCode::HTTP_404_NOT_FOUND);
+    response->AddHeader("Content-Type", "text/plain");
+    std::string body = "404: File not found";
+    response->SetBody(body);
+
+    return RequestHandler::Status::OK;
 }

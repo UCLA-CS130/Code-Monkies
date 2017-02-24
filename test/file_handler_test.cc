@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
-#include "handler/file_handler.h"
+#include "handler/static_handler.h"
 #include <string>
 
-class FileRequestHandlerTest : public ::testing::Test {
+class StaticHandlerTest : public ::testing::Test {
 public:
-	FileRequestHandler* handler_ = nullptr;
+	StaticHandler* handler_ = nullptr;
 
 	void TearDown() {
 		if (handler_ != nullptr)
@@ -12,7 +12,7 @@ public:
 	}
 };
 
-TEST_F(FileRequestHandlerTest, GetFileExtensionTest) {
+TEST_F(StaticHandlerTest, GetFileExtensionTest) {
 	std::string jpg = "file.jpg";
 	std::string lotsOfDots = "f.i.l.e.jpg";
 	std::string jpgFileExtension = "jpg";
@@ -24,7 +24,7 @@ TEST_F(FileRequestHandlerTest, GetFileExtensionTest) {
 	EXPECT_EQ(jpgExtension2, jpgFileExtension);
 }
 
-TEST_F(FileRequestHandlerTest, GetContentTypeFromExtensionTest) {
+TEST_F(StaticHandlerTest, GetContentTypeFromExtensionTest) {
 	std::string jpg = "jpg";
 	std::string png = "png";
 	std::string html = "html";

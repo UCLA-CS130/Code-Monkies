@@ -27,22 +27,19 @@ void Session::process_response()
 {
   auto req = Request::Parse(data_);
 
-  Response *res;
+  Response res;
   std::string uri = req->uri();
   boost::system::error_code ec;
 
   // determine whether we have an echo handler or a response handler
 
-  RequestHandler *handler = NULL;
+  RequestHandler *handler = nullptr;
 
-  std::pair<const std::string, std::string> const *longestPrefixMapping = NULL;
+  std::pair<const std::string, std::string> const *longestPrefixMapping = nullptr;
 
   for (auto &echoUri : conf_->echo_uris_) {
     if (uri == echoUri) { // guaranteed to be true at most once
-      handler = new (std::nothrow) EchoRequestHandler();
-      if (handler == NULL) {
-        goto err;
-      }
+      handler = RequestHandler::CreateByName("EchoHandler");
     }
   }
 
@@ -61,11 +58,11 @@ void Session::process_response()
    * we would choose /static/foo as the URI root instead of just /static.
    */
 
-  if (handler == NULL) {
+  if (handler == nullptr) {
     for (auto &fileUriMapping : conf_->file_uri_mappings_) {
       if (uri.find(fileUriMapping.first) == 0) {
         // Match against the mapping with the longest URI root.
-        if (longestPrefixMapping == NULL ||
+        if (longestPrefixMapping == nullptr ||
             (fileUriMapping.first.length() >
              longestPrefixMapping->first.length())) {
           longestPrefixMapping = &fileUriMapping;
@@ -74,60 +71,48 @@ void Session::process_response()
     }
   }
 
-  if (longestPrefixMapping != NULL) {
+  std::string file_path;
+  if (longestPrefixMapping != nullptr) {
     std::string uri_root = longestPrefixMapping->first;
     std::string root_dir = longestPrefixMapping->second;
     std::string uri_remainder = uri.substr(uri_root.length(), uri.length());
-    std::string file_path = root_dir + uri_remainder;
+    file_path = root_dir + uri_remainder;
     debugf("Session::process_response", "uri_root: %s\n", uri_root.c_str());
     debugf("Session::process_response", "root_dir: %s\n", root_dir.c_str());
     debugf("Session::process_response", "uri_remainder: %s\n",
         uri_remainder.c_str());
     debugf("Session::process_response", "file_path: %s\n", file_path.c_str());
-    handler = new (std::nothrow) FileRequestHandler(file_path);
-    if (handler == NULL) {
-      goto err;
-    }
+    handler = RequestHandler::CreateByName("StaticHandler");
   }
 
   // No URI root matches against the given URI. Return 404.
-  if (handler == NULL) {
-    handler = new (std::nothrow) NotFoundHandler();
-    if (handler == NULL) {
-      goto err;
-    }
+  if (handler == nullptr) {
+    handler = RequestHandler::CreateByName("NotFoundHandler");
   }
 
-  // TODO: I think this writing pattern could potentially fall out of
-  // sequence. Not sure if that's an issue.
-  while (!handler->doneHandling()) {
-    if (!handler->handle(req, res)) {
-      debugf("Session::process_response", "Failed to handle request.\n");
-      break;
-    }
-    do_write(res);
-  }
+  // TODO: fix
+  NginxConfig config;
+    // Begin handler block
+  handler->Init(file_path, config);
+  handler->HandleRequest(*(std::move(req)), &res);
 
-  if (handler != NULL) {
+  if (handler != nullptr) {
     delete handler;
   }
+
+  do_write(res);
 
   socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
   socket_.close();
 
   return;
-err:
-  if (handler == NULL) {
-    debugf("Session::process_response", "Failed to allocate handler when "
-        "processing request. Cannot serve client.\n");
-  }
 }
 
-void Session::do_write(Response *res)
+void Session::do_write(const Response &res)
 {
   auto self(shared_from_this());
 
-  const std::string res_str = res->ToString();
+  const std::string res_str = res.ToString();
   const char *res_cstr = res_str.c_str();
   size_t len = res_str.length();
 

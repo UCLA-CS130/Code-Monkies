@@ -10,9 +10,9 @@
 
 #include "config.h"
 #include "helpers.h"
-#include "handler/handler.h"
+#include "api/request_handler.h"
 #include "handler/echo_handler.h"
-#include "handler/file_handler.h"
+#include "handler/static_handler.h"
 #include "handler/not_found_handler.h"
 #include "api/response.h"
 #include "api/request.h"
@@ -69,7 +69,7 @@ class Session
      * Write msg to the client.
      * This is a best-effort function. Failure and success look the same.
      */
-    void do_write(Response *res);
+    void do_write(const Response& res);
 
     tcp::socket socket_;
     const Config *conf_;
