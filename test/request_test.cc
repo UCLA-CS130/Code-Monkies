@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "http/request.h"
-#include "http/constants.h"
+#include "api/request.h"
+#include <iostream>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -10,22 +10,16 @@ public:
 	Request* request_;
 
 	void SetUp() {
-		request_ = new Request("GET", "/path/to/some_file");
+		request_ = new Request();
+		request_->SetMethod("GET");
+		request_->SetUri("/path/to/some_file");
+		request_->SetVersion("HTTP/1.1");
 	}
 
 	void TearDown() {
 		delete request_;
 	}
 };
-
-TEST_F(RequestTest, buildFirstLine) {
-	std::string expectedFirstLine = "GET /path/to/some_file HTTP/1.1";
-
-	EXPECT_EQ(
-		request_->buildFirstLine(),
-		expectedFirstLine
-	);
-}
 
 TEST_F(RequestTest, buildRequestNoHeadersNoBody) {
 	// We expect a carriage return to end the 
@@ -34,7 +28,7 @@ TEST_F(RequestTest, buildRequestNoHeadersNoBody) {
 	std::string expectedRequest = "GET /path/to/some_file HTTP/1.1\r\n\r\n";
 
 	EXPECT_EQ(
-		request_->build(),
+		request_->raw_request(),
 		expectedRequest
 	);
 }
@@ -45,11 +39,14 @@ TEST_F(RequestTest, buildRequestSomeHeadersNoBody) {
 		"Content-Type: application/json\r\n"
 		"Authorization: Bearer abcdefg\r\n\r\n";
 
-	request_->addHeader("Content-Type: application/json");
-	request_->addHeader("Authorization: Bearer abcdefg");
+	Headers headers;
+	headers.push_back(std::make_pair("Content-Type", "application/json"));
+	headers.push_back(std::make_pair("Authorization", "Bearer abcdefg"));
+
+	request_->SetHeaders(headers);
 
 	EXPECT_EQ(
-		request_->build(),
+		request_->raw_request(),
 		expectedRequest
 	);
 }
@@ -61,38 +58,69 @@ TEST_F(RequestTest, buildFullRequest) {
 		"Authorization: Bearer abcdefg\r\n\r\n"
 		"{\"key\": 5}";
 
-	request_->addHeader("Content-Type: application/json");
-	request_->addHeader("Authorization: Bearer abcdefg");
-	request_->setBody("{\"key\": 5}");
+	Headers headers;
+	headers.push_back(std::make_pair("Content-Type", "application/json"));
+	headers.push_back(std::make_pair("Authorization", "Bearer abcdefg"));
+
+	request_->SetHeaders(headers);
+	request_->SetBody("{\"key\": 5}");
 
 	EXPECT_EQ(
-		request_->build(),
+		request_->raw_request(),
 		expectedRequest
 	);
 }
 
-TEST (RequestConsumeTest, ConsumeValidRequest) {
-	std::string firstLine = "GET /path/to/file HTTP/1.1";
-	std::vector<std::string> headers;
-	headers.push_back("Content-Type: text/plain");
-	headers.push_back("Authorization: Bearer abcdefg");
-	std::string body = "{\"key\": 5}";
+TEST(RequestParseTest, ParseValidRequest) {
+	std::string vaild_request = \
+		"GET /path/to/some_file HTTP/1.1\r\n"
+		"Content-Type: application/json\r\n"
+		"Authorization: Bearer abcdefg\r\n\r\n"
+		"{\"key\": 5}";
 
-	std::stringstream validRequestStream;
-	validRequestStream <<
-		firstLine << http::CRLF 
-		<< headers[0] << http::CRLF 
-		<< headers[1] << http::CRLF << http::CRLF 
-		<< body;
-	std::string validRequestString = validRequestStream.str();
+	auto request = Request::Parse(vaild_request);
 
-	Request r;
-	r.consume(validRequestString);
+	EXPECT_EQ(
+		request->method(),
+		"GET"
+	);
+	EXPECT_EQ(
+		request->uri(),
+		"/path/to/some_file"
+	);
+	EXPECT_EQ(
+		request->version(),
+		"HTTP/1.1"
+	);
 
-	std::cout << r.build() << std::endl;
+	Headers headers = request->headers();
+	auto content_type = headers[0];
+	auto authorization = headers[1];
 
-	EXPECT_EQ(r.buildFirstLine(), firstLine);
-	EXPECT_EQ(r.getHeaders()[0], headers[0]);
-	EXPECT_EQ(r.getHeaders()[1], headers[1]);
-	EXPECT_EQ(r.getBody(), body);
+	EXPECT_EQ(
+		content_type.first,
+		"Content-Type"
+	);
+	EXPECT_EQ(
+		content_type.second,
+		"application/json"
+	);
+	EXPECT_EQ(
+		authorization.first,
+		"Authorization"
+	);
+	EXPECT_EQ(
+		authorization.second,
+		"Bearer abcdefg"
+	);
+
+	EXPECT_EQ(
+		request->body(),
+		"{\"key\": 5}"
+	);
+
+	EXPECT_EQ(
+		request->raw_request(),
+		vaild_request
+	);
 }

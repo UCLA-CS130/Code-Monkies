@@ -1,18 +1,21 @@
 #ifndef NOT_FOUND_HANDLER_H
 #define NOT_FOUND_HANDLER_H
 
-#include "handler.h"
+#include "api/request_handler.h"
 
 // Handles sending 404's back to the client.
 class NotFoundHandler : public RequestHandler
 {
-  public:
-    const std::string TEXT_PLAIN = "Content-Type: text/plain";
+public:
+	virtual ~NotFoundHandler() {}
 
-    NotFoundHandler() {};
-    virtual ~NotFoundHandler() {};
+	virtual Status Init(const std::string& uri_prefix,
+    	                const NginxConfig& config);
 
-    virtual bool handle(const Request&, Response *&response);
+	virtual Status HandleRequest(const Request& request,
+        	                     Response* response);
 };
+
+REGISTER_REQUEST_HANDLER(NotFoundHandler);
 
 #endif

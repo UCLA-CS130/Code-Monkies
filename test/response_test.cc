@@ -1,13 +1,14 @@
 #include "gtest/gtest.h"
-#include "http/response.h"
+#include "api/response.h"
 #include <string>
 
-class Response200Test : public ::testing::Test {
+class ResponseTest : public ::testing::Test {
 public: 
 	Response* response_;
 
 	void SetUp() {
-		response_ = new Response(200);
+		response_ = new Response();
+		response_->SetStatus(Response::ResponseCode::HTTP_200_OK);
 	}
 
 	void TearDown() {
@@ -15,79 +16,46 @@ public:
 	}
 };
 
-TEST(ResponseConstructorTest, ShouldFailOnInvalidNum) {
-	ASSERT_EXIT(
-		Response(-1),
-		::testing::ExitedWithCode(1),
-		"-1 is not a valid status code for this class"
-	);
-}
-
-TEST(ResponseConstructorTest, StatusOkFor200) {
-	Response r(200);
-	EXPECT_EQ(
-		r.getReason(),
-		"OK"
-	);
-}
-
-TEST(ResponseConstructorTest, StatusNotFoundFor404) {
-	Response r(404);
-	EXPECT_EQ(
-		r.getReason(),
-		"NOT FOUND"
-	);
-}
-
-TEST_F(Response200Test, buildFirstLine) {
-	std::string expectedFirstLine = "HTTP/1.1 200 OK";
-
-	EXPECT_EQ(
-		response_->buildFirstLine(),
-		expectedFirstLine
-	);
-}
-
-TEST_F(Response200Test, buildRequestNoHeadersNoBody) {
+TEST_F(ResponseTest, buildResponseNoHeadersNoBody) {
 	// We expect a carriage return to end the 
 	// empty headers and a carriage return to separate 
 	// the empty body
-	std::string expectedRequest = "HTTP/1.1 200 OK\r\n\r\n";
+	std::string expectedResponse = "HTTP/1.1 200 OK\r\n\r\n";
 
 	EXPECT_EQ(
-		response_->build(),
-		expectedRequest
+		response_->ToString(),
+		expectedResponse
 	);
 }
 
-TEST_F(Response200Test, buildRequestSomeHeadersNoBody) {
-	std::string expectedRequest = \
+TEST_F(ResponseTest, buildResponseSomeHeadersNoBody) {
+	std::string expectedResponse = \
 		"HTTP/1.1 200 OK\r\n"
 		"Content-Type: application/json\r\n"
 		"Cache-Control: max-age=60\r\n\r\n";
 
-	response_->addHeader("Content-Type: application/json");
-	response_->addHeader("Cache-Control: max-age=60");
+	response_->AddHeader("Content-Type", "application/json");
+	response_->AddHeader("Cache-Control", "max-age=60");
 
 	EXPECT_EQ(
-		response_->build(),
-		expectedRequest
+		response_->ToString(),
+		expectedResponse
 	);
 }
 
-TEST_F(Response200Test, buildFullRequest) {
-	std::string expectedRequest = \
+TEST_F(ResponseTest, buildFullResponse) {
+	std::string expectedResponse = \
 		"HTTP/1.1 200 OK\r\n"
 		"Content-Type: application/json\r\n"
 		"Cache-Control: max-age=60\r\n\r\n"
 		"{\"key\": 5}";
 
-	response_->addHeader("Content-Type: application/json");
-	response_->addHeader("Cache-Control: max-age=60");
-	response_->setBody("{\"key\": 5}");
+	response_->AddHeader("Content-Type", "application/json");
+	response_->AddHeader("Cache-Control", "max-age=60");
+	response_->SetBody("{\"key\": 5}");
 
 	EXPECT_EQ(
-		response_->build(),
-		expectedRequest
+		response_->ToString(),
+		expectedResponse
 	);
 }
