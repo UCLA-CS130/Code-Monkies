@@ -52,6 +52,15 @@ class RequestHandlerRegisterer {
   }
 };
 
+// Special macro that registers a subclass of RequestHandler with the Registerer.
+// Allows for static creation via Request::CreateByName("$ClassName");
+// Ex:
+// class SomethingRequestHandler: public RequestHandler {
+// ...
+// };
+// REGISTER_REQUEST_HANDLER(SomethingRequestHandler);
+// ....
+// auto handler = RequestHandler::CreateByName("SomethingRequestHandler");
 #define REGISTER_REQUEST_HANDLER(ClassName) \
   static RequestHandlerRegisterer<ClassName> ClassName##__registerer(#ClassName)
 
