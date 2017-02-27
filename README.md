@@ -23,34 +23,48 @@ its unit tests' object files under /build.
 The server may be configured through a file based on nginx format. It must
 follow this form:
 
-server {
-  listen: 8080;
-  echo {
-    echo_uri_1;
-    echo_uri_2;
-    ...
-  }
-  serve {
-    file_uri_1 dir_1;
-    file_uri_2 dir_2;
-    ...
-  }
+~~~~
+# This is a comment.
+
+port 8080; # This is also a comment.
+
+path / StaticHandler {
+  root /var/www/html;
 }
 
-The order of configuration parameters does not matter, and echo/serve blocks
-may be split as follows:
+path /echo EchoHandler {}
 
-server {
-  echo {
-    echo_uri_1;
-  }
-  ...
-  echo {
-    echo_uri_2;
-  }
-}
+path /status StatusHandler {}
 
-However, URI's must not be repeated in the configuration.
+default NotFoundHandler {}
+~~~~
+
+URI prefixes must not be repeated in the configuration. When a given URI can be
+handled by multiple handlers based on their URI prefixes, the handler with the
+longest matching URI prefix is chosen. If no URI prefixes match the given URI,
+the handler specified as default (e.g. NotFoundHandler) is chosen.
+
+## General Server Layout
+
+Our webserver is layed out as follows:
+* main.cc is the entrypoint
+* the Config namespace (src/config.(h|cc)) encapsulates all additional logic
+  related to NginxConfigs, e.g. validation and access to various fields
+* the Server class (src/server.(h|cc)) sets up the listen loop, dispatching to
+  Session objects
+* the Session class (src/session.(h|cc)) handles individual requests. It
+  coordinates parsing raw requests, dispatch to RequestHandlers, logging
+  requests, and writing responses to the client. One Session exists per request
+* the Dispatcher class (src/dispatcher.(h|cc)) handles dispatching Requests to
+  the appropriate RequestHandler, and holds RequestHandlers in a private pool
+  to provide the long lifetime demanded by the API (see Webserver API)
+* the RequestLogger class (src/request_logger.h) does just that: logs pertinent
+  information about requests. Right now only the StatusHandler uses it
+* the EchoHandler, StaticHandler, StatusHandler and NotFoundHandler classes
+  (src/handlers/\*) map Requests to appropriate Responses. They all subclass
+  RequestHandler (src/api/request_handler.(h|cc))
+* the Request and Response classes (src/api/(request|response).(h|cc)) wrap client
+  requests and server responses, respectively
 
 ## Webserver API
 All relevant .h and .cc files for the [CS130 API](https://github.com/UCLA-CS130/webserver-api) are stored in /src/api.
