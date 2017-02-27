@@ -49,7 +49,7 @@ int-test: test
 	scripts/integration.sh
 
 .PHONY: gcov
-gcov:
+gcov: test
 	gcov -o $(OBJ_DIR) -r src/*
 
 .PHONY: clean

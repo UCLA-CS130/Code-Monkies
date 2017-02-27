@@ -25,7 +25,7 @@ bool Config::Validate(const NginxConfig *conf)
        * Must be a port number
        */
       if (statement->tokens_[0] == "port") {
-        // TODO pls tell me there's a better way
+        // TODO this has to exist somewhere in the C stdlib / STL...
         for (auto const& c : statement->tokens_[1]) {
           if (!isdigit(c)) {
             debugf("Config::Validate", "Invalid character in port: %c.\n", c);
@@ -72,25 +72,27 @@ bool Config::Validate(const NginxConfig *conf)
               "block: got %s, expected root.\n", tuple->tokens_[0].c_str());
           return false;
         }
-        if (uri_prefixes.find(tuple->tokens_[1]) != uri_prefixes.end()) {
-          debugf("Config::Validate", "URI in serve block already "
-              "defined.\n");
+        if (uri_prefixes.find(statement->tokens_[1]) != uri_prefixes.end()) {
+          debugf("Config::Validate", "Duplicate URI prefix. Prefix: %s.\n",
+              statement->tokens_[1].c_str());
           return false;
         }
-        uri_prefixes.emplace(tuple->tokens_[1]);
+        uri_prefixes.emplace(statement->tokens_[1]);
 
       } else if (statement->tokens_[2] == "EchoHandler" ||
           statement->tokens_[2] == "StatusHandler") {
-        // TODO: the code below doesn't work. Not sure how to go about checking
-        // that the child block is empty since I'm unfamiliar with these fancy
-        // C++11 pointers.
-        /*
-        if (statement->child_block_ != nullptr) {
+        if (statement->child_block_->statements_.size() != 0) {
           debugf("Config::Validate", "Expected empty child block for "
-              "EchoHandler.\n");
+              "EchoHandler/StatusHandler.\n");
           return false;
         }
-        */
+
+        if (uri_prefixes.find(statement->tokens_[1]) != uri_prefixes.end()) {
+          debugf("Config::Validate", "Duplicate URI prefix. Prefix: %s.\n",
+              statement->tokens_[1].c_str());
+          return false;
+        }
+        uri_prefixes.emplace(statement->tokens_[1]);
       } else {
         debugf("Config::Validate", "Unrecognized handler: %s.\n",
             statement->tokens_[2].c_str());

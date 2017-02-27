@@ -10,11 +10,12 @@
 #define HANDLER_BLOCK "path %s %s {\n%s\n}\n%s"
 #define DEFAULT_BLOCK "default %s {\n%s\n}\n%s"
 
+#define NUM_HANDLERS 3
+
 class ConfigBuilderTest : public ::testing::Test {
   public:
     NginxConfigParser parser;
     NginxConfig *config;
-    Config *valid_config;
     char *config_str;
 
     char *getbuf(int size) {
@@ -174,8 +175,6 @@ TEST_F(ConfigBuilderTest, EchoBlockTest) {
   finalizeConfig();
   ASSERT_TRUE(configIsValid());
   // non-empty body should not parse
-  // TODO
-  /*
   addInitialBlock();
   addPort(80);
   addHandlerBlock("/echo", "EchoHandler");
@@ -183,7 +182,6 @@ TEST_F(ConfigBuilderTest, EchoBlockTest) {
   finalizeBlock();
   finalizeConfig();
   ASSERT_FALSE(configIsValid());
-  */
 }
 
 TEST_F(ConfigBuilderTest, StaticBlockTest) {
@@ -230,4 +228,42 @@ TEST_F(ConfigBuilderTest, StaticBlockTest) {
 }
 
 TEST_F(ConfigBuilderTest, DuplicateURIsShouldFail) {
+  // generate two handler statements with the same URI prefix. Each handler is
+  // randomly chosen. I'm using a fuzz test for brevity, especially once we add
+  // more handlers.
+  srand(time(NULL));
+  for (int i = 0; i < 100; i++) {
+    addInitialBlock();
+    addPort(80);
+
+    int which1 = rand() % NUM_HANDLERS;
+    if (which1 == 0) {
+      addHandlerBlock("/foo", "StaticHandler");
+      addBlockEntry("root /foo");
+      finalizeBlock();
+    } else if (which1 == 1) {
+      addHandlerBlock("/foo", "EchoHandler");
+      finalizeBlock();
+    } else {
+      addHandlerBlock("/foo", "StatusHandler");
+      finalizeBlock();
+    }
+
+    int which2 = rand() % NUM_HANDLERS;
+    if (which2 == 0) {
+      addHandlerBlock("/foo", "StaticHandler");
+      addBlockEntry("root /bar");
+      finalizeBlock();
+    } else if (which1 == 1) {
+      addHandlerBlock("/foo", "EchoHandler");
+      finalizeBlock();
+    } else {
+      addHandlerBlock("/foo", "StatusHandler");
+      finalizeBlock();
+    }
+
+    finalizeConfig();
+    ASSERT_FALSE(configIsValid()) << "Failed with following config:" << \
+      std::endl << config_str << std::endl;
+  }
 }
