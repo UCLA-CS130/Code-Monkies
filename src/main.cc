@@ -27,20 +27,16 @@ int main(int argc, char *argv[])
 
   debugf("main", "Configuration is syntactically valid.\n");
 
-  Config *valid_config;
-
-  if (!ConfigBuilder().build(config, valid_config)) {
-    fprintf(stderr, "Failed to build valid server configuration.\n");
+  if (!Config::Validate(&config)) {
+    debugf("main", "Configuration is semantically invalid.\n");
     exit(1);
   }
 
   debugf("main", "Configuration is semantically valid.\n");
 
-  debugf("main", "Got configuration:\n%s", valid_config->toString().c_str());
-
   try {
     boost::asio::io_service io_service;
-    Server s(io_service, valid_config);
+    Server s(io_service, &config);
     io_service.run();
   } catch (std::exception &e) {
     fprintf(stderr, "io_service encountered exception: %s\n", e.what());

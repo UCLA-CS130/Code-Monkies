@@ -6,16 +6,16 @@
 #include "config.h"
 #include "helpers.h"
 
-#define SERVER_BLOCK "server {\n%s\n}"
-#define PORT "listen %d;\n%s"
-#define ECHO_BLOCK "echo {\n%s\n}\n%s"
-#define SERVE_BLOCK "serve {\n%s\n}\n%s"
+#define PORT "port %d;\n%s"
+#define HANDLER_BLOCK "path %s %s {\n%s\n}\n%s"
+#define DEFAULT_BLOCK "default %s {\n%s\n}\n%s"
+
+#define NUM_HANDLERS 3
 
 class ConfigBuilderTest : public ::testing::Test {
   public:
     NginxConfigParser parser;
     NginxConfig *config;
-    Config *valid_config;
     char *config_str;
 
     char *getbuf(int size) {
@@ -47,8 +47,8 @@ class ConfigBuilderTest : public ::testing::Test {
      * Configuration generators.
      */
 
-    void addServerBlock() {
-      sprintf(config_str, SERVER_BLOCK, "%s");
+    void addInitialBlock() {
+      sprintf(config_str, "%s", "%s");
     }
 
     void addPort(int port) {
@@ -56,26 +56,30 @@ class ConfigBuilderTest : public ::testing::Test {
       sprintf(config_str, bufcpy(config_str), port, "%s");
     }
 
-    void addServeBlock() {
-      sprintf(config_str, bufcpy(config_str), SERVE_BLOCK);
+    void addHandlerBlock(const char *uri_prefix, const char *handler_name) {
+      sprintf(config_str, bufcpy(config_str), HANDLER_BLOCK);
+      sprintf(config_str, bufcpy(config_str), uri_prefix, handler_name, "%s",
+          "%s");
     }
 
-    void addEchoBlock() {
-      sprintf(config_str, bufcpy(config_str), ECHO_BLOCK);
+    void addDefaultBlock(const char *handler_name) {
+      sprintf(config_str, bufcpy(config_str), DEFAULT_BLOCK);
+      sprintf(config_str, bufcpy(config_str), handler_name, "%s", "%s");
     }
 
     /*
-     * At this point our format string has two %s tokens in it. str must not
-     * contain any format specifiers, should not contain any newlines, and
-     * should not have a semicolon at the end.
+     * After adding any block, our format string has two %s tokens in it - one
+     * inside the block, and one trailing the block. str must not contain any
+     * format specifiers, should not contain any newlines, and should not have
+     * a semicolon at the end.
      * This method can be called multiple times, and must be followed by a
-     * call to finalizeInternalBlock.
+     * call to finalizeBlock.
      */
     void addBlockEntry(const char *str) {
       sprintf(config_str, bufcpy(config_str), fuckstrcat(str, ";\n%s"), "%s");
     }
 
-    void finalizeInternalBlock() {
+    void finalizeBlock() {
       sprintf(config_str, bufcpy(config_str), "", "%s");
     }
 
@@ -83,13 +87,16 @@ class ConfigBuilderTest : public ::testing::Test {
       sprintf(config_str, bufcpy(config_str), "");
     }
 
-    bool configBuilds() {
+    bool configIsValid() {
       std::istringstream config_stream(config_str);
       config = new NginxConfig();
       if (!parser.Parse(&config_stream, config)) {
-        ADD_FAILURE() << "Failed to parse configuration.";
+        ADD_FAILURE() << "Failed to parse configuration:\n.";
       }
-      bool ret = ConfigBuilder().build(*config, valid_config);
+      printf("a\n");
+      bool ret = Config::Validate(config);
+      printf("b\n");
+      printf("ret: %d\n", ret);
       delete config;
       return ret;
     }
@@ -105,106 +112,158 @@ class ConfigBuilderTest : public ::testing::Test {
 };
 
 TEST_F(ConfigBuilderTest, NoPortShouldNotParse) {
-  addServerBlock();
+  addInitialBlock();
+  addHandlerBlock("/echo", "EchoHandler");
+  finalizeBlock();
   finalizeConfig();
-  ASSERT_FALSE(configBuilds());
+  ASSERT_FALSE(configIsValid());
 }
 
 TEST_F(ConfigBuilderTest, MultiplePortsShouldNotParse) {
-  addServerBlock();
+  addInitialBlock();
   addPort(80);
   addPort(8080);
   finalizeConfig();
-  ASSERT_FALSE(configBuilds());
+  ASSERT_FALSE(configIsValid());
 }
 
 TEST_F(ConfigBuilderTest, PortOnlyShouldParse) {
-  addServerBlock();
+  addInitialBlock();
   addPort(80);
   finalizeConfig();
-  ASSERT_TRUE(configBuilds());
+  ASSERT_TRUE(configIsValid());
 }
 
 TEST_F(ConfigBuilderTest, BadPortShouldFail) {
   // reserved port
-  addServerBlock();
+  addInitialBlock();
   addPort(0);
   finalizeConfig();
-  ASSERT_FALSE(configBuilds());
+  ASSERT_FALSE(configIsValid());
   // out of range port
-  addServerBlock();
+  addInitialBlock();
   addPort(-1);
   finalizeConfig();
-  ASSERT_FALSE(configBuilds());
+  ASSERT_FALSE(configIsValid());
   // out of range port
-  addServerBlock();
+  addInitialBlock();
   addPort(65536);
   finalizeConfig();
-  ASSERT_FALSE(configBuilds());
-}
-
-TEST_F(ConfigBuilderTest, EmptyInnerBlocksShouldParse) {
-  addServerBlock();
-  addPort(80);
-  addEchoBlock();
-  finalizeInternalBlock();
-  addServeBlock();
-  finalizeInternalBlock();
-  finalizeConfig();
-  ASSERT_TRUE(configBuilds());
+  ASSERT_FALSE(configIsValid());
 }
 
 TEST_F(ConfigBuilderTest, PortLastShouldParse) {
-  addServerBlock();
-  addEchoBlock();
-  finalizeInternalBlock();
-  addServeBlock();
-  finalizeInternalBlock();
+  addInitialBlock();
+  addHandlerBlock("/echo", "EchoHandler");
+  finalizeBlock();
+  addHandlerBlock("/static", "StaticHandler");
+  addBlockEntry("root /foo");
+  finalizeBlock();
+  addHandlerBlock("/status", "StatusHandler");
+  finalizeBlock();
   addPort(80);
   finalizeConfig();
-  ASSERT_TRUE(configBuilds());
+  ASSERT_TRUE(configIsValid());
 }
 
-TEST_F(ConfigBuilderTest, DuplicateInnerBlocksShouldParse) {
-  addServerBlock();
+TEST_F(ConfigBuilderTest, EchoBlockTest) {
+  // empty body should parse
+  addInitialBlock();
   addPort(80);
-  for (int i = 0; i < 10; i++) {
-    addEchoBlock();
-    finalizeInternalBlock();
-    addServeBlock();
-    finalizeInternalBlock();
-  }
+  addHandlerBlock("/echo", "EchoHandler");
+  finalizeBlock();
   finalizeConfig();
-  ASSERT_TRUE(configBuilds());
+  ASSERT_TRUE(configIsValid());
+  // non-empty body should not parse
+  addInitialBlock();
+  addPort(80);
+  addHandlerBlock("/echo", "EchoHandler");
+  addBlockEntry("root /foo");
+  finalizeBlock();
+  finalizeConfig();
+  ASSERT_FALSE(configIsValid());
+}
+
+TEST_F(ConfigBuilderTest, StaticBlockTest) {
+  // empty body should not parse
+  addInitialBlock();
+  addPort(80);
+  addHandlerBlock("/static", "StaticHandler");
+  finalizeBlock();
+  finalizeConfig();
+  ASSERT_FALSE(configIsValid());
+  // valid body should parse
+  addInitialBlock();
+  addPort(80);
+  addHandlerBlock("/static", "StaticHandler");
+  addBlockEntry("root /foo");
+  finalizeBlock();
+  finalizeConfig();
+  ASSERT_TRUE(configIsValid());
+  // first word must be "root"
+  addInitialBlock();
+  addPort(80);
+  addHandlerBlock("/static", "StaticHandler");
+  addBlockEntry("foo /bar");
+  finalizeBlock();
+  finalizeConfig();
+  printf("%s\n", config_str);
+  ASSERT_FALSE(configIsValid());
+  // must only have 2 words
+  addInitialBlock();
+  addPort(80);
+  addHandlerBlock("/static", "StaticHandler");
+  addBlockEntry("foo /bar /baz");
+  finalizeBlock();
+  finalizeConfig();
+  ASSERT_FALSE(configIsValid());
+  // must only have 2 words
+  addInitialBlock();
+  addPort(80);
+  addHandlerBlock("/static", "StaticHandler");
+  addBlockEntry("foo");
+  finalizeBlock();
+  finalizeConfig();
+  ASSERT_FALSE(configIsValid());
 }
 
 TEST_F(ConfigBuilderTest, DuplicateURIsShouldFail) {
-  addServerBlock();
-  addPort(80);
-  addEchoBlock();
-  addBlockEntry("/echo1");
-  addBlockEntry("/echo1");
-  finalizeInternalBlock();
-  finalizeConfig();
-  ASSERT_FALSE(configBuilds());
+  // generate two handler statements with the same URI prefix. Each handler is
+  // randomly chosen. I'm using a fuzz test for brevity, especially once we add
+  // more handlers.
+  srand(time(NULL));
+  for (int i = 0; i < 100; i++) {
+    addInitialBlock();
+    addPort(80);
 
-  addServerBlock();
-  addPort(80);
-  addServeBlock();
-  addBlockEntry("/static1 /var/www/html");
-  addBlockEntry("/static1 /opt/html");
-  finalizeInternalBlock();
-  finalizeConfig();
-  ASSERT_FALSE(configBuilds());
+    int which1 = rand() % NUM_HANDLERS;
+    if (which1 == 0) {
+      addHandlerBlock("/foo", "StaticHandler");
+      addBlockEntry("root /foo");
+      finalizeBlock();
+    } else if (which1 == 1) {
+      addHandlerBlock("/foo", "EchoHandler");
+      finalizeBlock();
+    } else {
+      addHandlerBlock("/foo", "StatusHandler");
+      finalizeBlock();
+    }
 
-  addServerBlock();
-  addPort(80);
-  addEchoBlock();
-  addBlockEntry("/foo");
-  finalizeInternalBlock();
-  addServeBlock();
-  addBlockEntry("/foo /var/www/html");
-  finalizeInternalBlock();
-  finalizeConfig();
-  ASSERT_FALSE(configBuilds());
+    int which2 = rand() % NUM_HANDLERS;
+    if (which2 == 0) {
+      addHandlerBlock("/foo", "StaticHandler");
+      addBlockEntry("root /bar");
+      finalizeBlock();
+    } else if (which1 == 1) {
+      addHandlerBlock("/foo", "EchoHandler");
+      finalizeBlock();
+    } else {
+      addHandlerBlock("/foo", "StatusHandler");
+      finalizeBlock();
+    }
+
+    finalizeConfig();
+    ASSERT_FALSE(configIsValid()) << "Failed with following config:" << \
+      std::endl << config_str << std::endl;
+  }
 }

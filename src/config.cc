@@ -5,172 +5,162 @@
 
 using helpers::debugf;
 
-std::string Config::toString() const
+bool Config::Validate(const NginxConfig *conf)
 {
-  std::ostringstream out;
-  out << "port: " << port_ << std::endl;
-  out << "echo uris:" << std::endl;
-  for (auto const& uri : echo_uris_) {
-    out << "  " << uri << std::endl;
-  }
-  out << "file uri mappings:" << std::endl;
-  for (auto const& file_uri_mapping : file_uri_mappings_) {
-    out << "  " << file_uri_mapping.first;
-    out << " -> " << file_uri_mapping.second << std::endl;
-  }
-  return out.str();
-}
-
-ConfigBuilder::ConfigBuilder()
-{
-  port_ = -1;
-}
-
-bool ConfigBuilder::build(const NginxConfig &config, Config *&conf)
-{
-  if (config.statements_.size() != 1) {
-    debugf("ConfigBuilder::build", "Incorrect number of top-level statements "
-        "in server configuration file. Got %lu, expected 1.\n",
-        config.statements_.size());
-    return false;
-  }
-
-  if (config.statements_[0]->child_block_ == NULL) {
-    debugf("ConfigBuilder::build", "Expected child block for top-level "
-        "statement.\n");
-    return false;
-  }
+  std::unordered_set<std::string> uri_prefixes; // all uri prefixes defined in
+      // conf. used to ensure that a uri prefix doesn't get assigned two
+      // handlers
+  bool gotPort = false;
 
   for (auto const& statement :
-      config.statements_[0]->child_block_->statements_) {
+      conf->statements_) {
     size_t len = statement->tokens_.size();
+
     if (len == 0) {
-      debugf("ConfigBuilder::build", "Invalid configuration file.\n");
+      debugf("Config::Validate", "Invalid configuration file.\n");
       return false;
-    } else if (len == 1) {
-      /*
-       * Must be a serve block or an echo block.
-       */
-      if (statement->tokens_[0] == "serve") {
-        for (auto const& tuple : statement->child_block_->statements_) {
-          if (tuple->tokens_.size() != 2) {
-            debugf("ConfigBuilder::build", "Invalid serve tuple: has length "
-                "%lu, should have length 2.\n", tuple->tokens_.size());
-            return false;
-          }
-          if (!addFileUriMapping(tuple->tokens_[0],
-                tuple->tokens_[1])) {
-            debugf("ConfigBuilder::build", "Invalid serve tuple.\n");
-            return false;
-          }
-        }
-      } else if (statement->tokens_[0] == "echo") {
-        for (auto const& uri : statement->child_block_->statements_) {
-          if (uri->tokens_.size() != 1) {
-            debugf("ConfigBuilder::build", "Invalid echo URI: received %lu "
-                "tokens, should have received 1.\n", uri->tokens_.size());
-            return false;
-          }
-          if (!addEchoUri(uri->tokens_[0])) {
-            debugf("ConfigBuilder::build", "Invalid echo URI.\n");
-            return false;
-          }
-        }
-      } else {
-        debugf("ConfigBuilder::build", "Unexpected inner block: %s.\n",
-            statement->tokens_[0].c_str());
-        return false;
-      }
+
     } else if (len == 2) {
       /*
        * Must be a port number
        */
-      if (statement->tokens_[0] == "listen") {
-        if (!setPort(std::stoi(statement->tokens_[1]))) {
-          debugf("ConfigBuilder::build", "Received invalid port.\n");
+      if (statement->tokens_[0] == "port") {
+        // TODO this has to exist somewhere in the C stdlib / STL...
+        for (auto const& c : statement->tokens_[1]) {
+          if (!isdigit(c)) {
+            debugf("Config::Validate", "Invalid character in port: %c.\n", c);
+            return false;
+          }
+        }
+        long port = strtol(statement->tokens_[1].c_str(), nullptr, 10);
+        if (gotPort ||
+            (port < 1 || port > PORT_MAX)) {
+          debugf("Config::Validate", "Received invalid or duplicate port.\n");
           return false;
         }
+        gotPort = true;
+      } else if (statement->tokens_[0] == "default") {
+        continue; // not much to do here
       } else {
-        debugf("ConfigBuilder::build", "Unexpected inner statement: %s.\n",
+        debugf("Config::Validate", "Unexpected inner statement: %s.\n",
             statement->ToString(0).c_str());
         return false;
       }
+
+    } else if (len == 3) {
+      if (statement->tokens_[0] != "path") {
+        debugf("Config::Validate", "Unexpected 3-token statement: %s.\n",
+            statement->ToString(0).c_str());
+        return false;
+      }
+
+      if (statement->tokens_[2] == "StaticHandler") {
+        if (statement->child_block_ == NULL ||
+            statement->child_block_->statements_.size() != 1) {
+          debugf("Config::Validate", "Expected child block with exactly one "
+              "statement for StaticHandler.\n");
+          return false;
+        }
+        auto tuple = statement->child_block_->statements_[0];
+        if (tuple->tokens_.size() != 2) {
+          debugf("Config::Validate", "Invalid serve tuple: has length "
+              "%lu, should have length 2.\n", tuple->tokens_.size());
+          return false;
+        }
+        if (tuple->tokens_[0] != "root") {
+          debugf("Config::Validate", "Unexpected token in StaticHandler "
+              "block: got %s, expected root.\n", tuple->tokens_[0].c_str());
+          return false;
+        }
+        if (uri_prefixes.find(statement->tokens_[1]) != uri_prefixes.end()) {
+          debugf("Config::Validate", "Duplicate URI prefix. Prefix: %s.\n",
+              statement->tokens_[1].c_str());
+          return false;
+        }
+        uri_prefixes.emplace(statement->tokens_[1]);
+
+      } else if (statement->tokens_[2] == "EchoHandler" ||
+          statement->tokens_[2] == "StatusHandler") {
+        if (statement->child_block_->statements_.size() != 0) {
+          debugf("Config::Validate", "Expected empty child block for "
+              "EchoHandler/StatusHandler.\n");
+          return false;
+        }
+
+        if (uri_prefixes.find(statement->tokens_[1]) != uri_prefixes.end()) {
+          debugf("Config::Validate", "Duplicate URI prefix. Prefix: %s.\n",
+              statement->tokens_[1].c_str());
+          return false;
+        }
+        uri_prefixes.emplace(statement->tokens_[1]);
+      } else {
+        debugf("Config::Validate", "Unrecognized handler: %s.\n",
+            statement->tokens_[2].c_str());
+        return false;
+      }
     } else {
-      debugf("ConfigBuilder::build", "Unexpected inner statement: %s.\n",
+      debugf("Config::Validate", "Unexpected inner statement: %s.\n",
           statement->ToString(0).c_str());
       return false;
     }
   }
 
-  if (!build(conf)) {
-    debugf("ConfigBuilder::build", "Failed to build valid server "
-        "configuration.\n");
+  if (!gotPort) {
+    debugf("Config::Validate", "No port specified in configuration file.\n");
     return false;
   }
 
   return true;
 }
 
-bool ConfigBuilder::setPort(int port)
+unsigned short Config::GetPort(const NginxConfig *conf)
 {
-  if (port < 1 || port > PORT_MAX) {
-    debugf("ConfigBuilder::setPort", "Port out of range. Port: %d.\n", port);
-    return false;
+  for (auto const& stmt : conf->statements_) {
+    if (stmt->tokens_.size() == 2 && stmt->tokens_[0] == "port") {
+      // guaranteed to be within [1,65535] if Valid passed for NginxConfig
+      return (unsigned short) strtol(stmt->tokens_[1].c_str(), nullptr, 10);
+    }
   }
-  if (port_ != -1) {
-    debugf("ConfigBuilder::setPort", "Cannot set multiple ports. Old port: "
-        "%d, new port: %d.\n", port_, port);
-    return false;
-  }
-  port_ = port;
-  return true;
+  debugf("Config::GetPort", "Failed to get port from config. This should "
+      "never happen.\n");
+  return 0;
 }
 
-bool ConfigBuilder::addEchoUri(std::string uri)
-{
-  auto have_echo_uri = echo_uris_.find(uri);
-  auto have_serve_uri = file_uri_mappings_.find(uri);
-  if (have_echo_uri == echo_uris_.end() &&
-      have_serve_uri == file_uri_mappings_.end()) {
-    // TODO error check this
-    echo_uris_.emplace(uri);
-    return true;
-  } else {
-    debugf("ConfigBuilder::addEchoUri", "Echo URI already specified. URI: "
-        "%s.\n", uri.c_str());
-    return false;
-  }
-}
 
-bool ConfigBuilder::addFileUriMapping(std::string uri, std::string path)
+bool Config::GetHandlerInfo(const NginxConfig *conf,
+    const Request *req, NginxConfigStatement *&info)
 {
-  auto have_echo_uri = echo_uris_.find(uri);
-  auto have_serve_uri = file_uri_mappings_.find(uri);
-  if (have_echo_uri == echo_uris_.end() &&
-      have_serve_uri == file_uri_mappings_.end()) {
-    // TODO error check this
-    file_uri_mappings_.emplace(uri, path);
-    return true;
-  } else {
-    debugf("ConfigBuilder::addFileUriMapping", "File URI already specified. "
-        "URI: %s.\n", uri.c_str());
-    return false;
-  }
-}
-
-bool ConfigBuilder::build(Config *&config)
-{
-  if (port_ == -1) {
-    debugf("ConfigBuilder::build", "Port never set.\n");
-    return false;
+  /*
+   * Look over req and conf to determine handler with longest matching prefix.
+   */
+  std::string longest_prefix;
+  std::string uri = req->uri();
+  for (auto const& stmt : conf->statements_) {
+    if (stmt->tokens_[0] == "path") {
+      if (uri.find(stmt->tokens_[1]) == 0 &&
+          longest_prefix.size() < stmt->tokens_[1].size()) {
+        longest_prefix = stmt->tokens_[1];
+        info = stmt.get();
+      }
+    }
   }
 
-  config = new (std::nothrow) Config((short) port_, echo_uris_,
-      file_uri_mappings_);
-  if (config == NULL) {
-    debugf("ConfigBuilder::build", "Failed to allocate config.\n");
+  /*
+   * Nothing matches the given URI, so return false.
+   */
+  if (longest_prefix.size() == 0) {
     return false;
   }
 
   return true;
+}
+
+void Config::GetAllHandlerInfo(const NginxConfig *conf,
+    std::list<NginxConfigStatement const *> &info)
+{
+  for (auto const& stmt : conf->statements_) {
+    if (stmt->tokens_[0] == "path" || stmt->tokens_[0] == "default") {
+      info.push_back(stmt.get());
+    }
+  }
 }

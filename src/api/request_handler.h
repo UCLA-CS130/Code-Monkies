@@ -9,7 +9,7 @@
 #include <string>
 
 // Represents the parent of all request handlers. Implementations should expect to
-// be long lived and created at server constrution.
+// be long lived and created at server construction.
 class RequestHandler {
 public:
   enum Status {

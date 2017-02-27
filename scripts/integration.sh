@@ -10,17 +10,21 @@ while [ -e $CONFIG_FILE ]; do
 done
 
 CONFIG=$(cat <<'CONFIG_END'
-server {
-  listen 8080;
-  echo {
-    /echo1;
-    /echo2;
-  }
-  serve {
-    /static1 /var/www/html;
-    /static2 /home/html;
-  }
+# This is a comment.
+
+port 8080;  # This is also a comment.
+
+path / StaticHandler {
+  root /opt/static;
 }
+
+path /echo EchoHandler {}
+
+path /status StatusHandler {}
+
+# Default response handler if no handlers match.
+# TODO this doesnt work yet
+default NotFoundHandler {}
 CONFIG_END
 )
 

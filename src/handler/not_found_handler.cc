@@ -20,7 +20,7 @@ RequestHandler::Status NotFoundHandler::HandleRequest(const Request& request,
 
     response->SetStatus(Response::ResponseCode::HTTP_404_NOT_FOUND);
     response->AddHeader("Content-Type", "text/plain");
-    std::string body = "404: File not found";
+    std::string body = "404: File not found\n";
     response->SetBody(body);
 
     return RequestHandler::Status::OK;

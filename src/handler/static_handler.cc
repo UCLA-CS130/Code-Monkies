@@ -1,8 +1,13 @@
+#include "config.h"
 #include "handler/static_handler.h"
+#include "helpers.h"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
+
+using helpers::debugf;
 
 // Why poorly reinvent the wheel? Shameless taken from
 // http://stackoverflow.com/questions/51949/how-to-get-file-extension-from-string-in-c/51993#51993
@@ -38,9 +43,29 @@ Header StaticHandler::getContentTypeFromExtension(const std::string& extension) 
 
 RequestHandler::Status StaticHandler::HandleRequest(const Request& request,
                      Response* response) {
+  NginxConfigStatement *handler_info;
+  
+  if (!Config::GetHandlerInfo(conf_, &request, handler_info)) {
+    // TODO
+  }
+
+  std::string root =
+    handler_info->child_block_->statements_[0]->tokens_[1];
+  std::string file_path_end = request.uri().substr(handler_info->tokens_[1].size());
+  std::string file_path;
+  if (root[root.size() - 1] != '/' && file_path_end[0] != '/') {
+    file_path = root + "/" + file_path_end;
+  } else {
+    file_path = root + file_path_end;
+  }
+  
+  // cut out 
+  debugf("StaticHandler::HandleRequest", "Serving file: %s.\n",
+      file_path.c_str());
+
 	// Try to get the file specified by the handler
 	std::ifstream file;
-	file.open(file_path_, std::fstream::in);
+	file.open(file_path, std::fstream::in);
 
 	// Check if file exists/is available
 	// TODO: Check permissions and throw 403 when appropriate
@@ -68,10 +93,8 @@ RequestHandler::Status StaticHandler::HandleRequest(const Request& request,
 
 RequestHandler::Status StaticHandler::Init(const std::string& uri_prefix,
             const NginxConfig& config) {
-
-	// TODO: THIS IS VERY WRONG. PASSES THE INT TEST
-	file_path_ = uri_prefix;
-	(void) config;
+  (void) uri_prefix;
+	conf_ = &config;
 
 	return RequestHandler::Status::OK;
 }

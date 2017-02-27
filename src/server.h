@@ -3,8 +3,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef SERVER_INCLUDED
-#define SERVER_INCLUDED
+#ifndef SERVER_H
+#define SERVER_H
 
 #include <string>
 #include <vector>
@@ -19,7 +19,7 @@ using boost::asio::ip::tcp;
 class Server
 {
 public:
-  Server(boost::asio::io_service& io_service, const Config *conf);
+  Server(boost::asio::io_service& io_service, const NginxConfig *conf);
 
 private:
   /*
@@ -32,7 +32,7 @@ private:
   tcp::socket socket_;
 
   // Nginx config fields
-  const Config *conf_;
+  const NginxConfig *conf_;
 };
 
 #endif
