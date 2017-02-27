@@ -3,19 +3,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef SESSION_INCLUDED
-#define SESSION_INCLUDED
+#ifndef SESSION_H
+#define SESSION_H
 
 #include <boost/asio.hpp>
 
 #include "config.h"
 #include "helpers.h"
-#include "api/request_handler.h"
-#include "handler/echo_handler.h"
-#include "handler/static_handler.h"
-#include "handler/not_found_handler.h"
 #include "api/response.h"
-#include "api/request.h"
 
 #define RESPONSE "HTTP/1.1 200 OK\r\n"\
   "Content-Length: %lu\r\n"\
@@ -39,7 +34,7 @@ class Session
 : public std::enable_shared_from_this<Session>
 {
   public:
-    Session(tcp::socket socket, const Config *conf)
+    Session(tcp::socket socket, const NginxConfig *conf)
       : socket_(std::move(socket)), conf_(conf)
     {
     }
@@ -72,7 +67,7 @@ class Session
     void do_write(const Response& res);
 
     tcp::socket socket_;
-    const Config *conf_;
+    const NginxConfig *conf_;
     static const std::size_t MAX_LENGTH = 65536;
     char data_[MAX_LENGTH];
 };

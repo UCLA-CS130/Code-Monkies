@@ -16,6 +16,6 @@ TEST(NotFoundHandlerTest, TestHandle) {
 
 	EXPECT_EQ(
 		response.body(),
-		"404: File not found"
+		"404: File not found\n"
 	);
 }

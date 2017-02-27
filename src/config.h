@@ -1,74 +1,48 @@
-#ifndef CONFIG_INCLUDED
-#define CONFIG_INCLUDED
+#ifndef CONFIG_H
+#define CONFIG_H
 
+#include <list>
 #include <unordered_map>
 #include <unordered_set>
 
+#include "api/request.h"
 #include "config_parser.h"
 
 #define PORT_MAX 65535
 
+/*
+ * Helper methods to validate and navigate an NginxConfig.
+ * TODO this would be more cleanly expressed as a namespace.
+ */
 class Config {
   public:
-    Config(const short port,
-        const std::unordered_set<std::string> &echo_uris,
-        const std::unordered_map<std::string, std::string>
-          &file_uri_mappings)
-      : port_(port), echo_uris_(echo_uris), file_uri_mappings_(file_uri_mappings)
-    {
-    }
-
-    std::string toString() const;
-
-    const short port_;
-    const std::unordered_set<std::string> echo_uris_;
-    const std::unordered_map<std::string, std::string> file_uri_mappings_;
-};
-
-class ConfigBuilder {
-  public:
-    ConfigBuilder();
+    /*
+     * Check whether conf conforms to class's style.
+     */
+    static bool Validate(const NginxConfig *conf);
 
     /*
-     * Given a parsed nginx-style configuration, build a valid server configuration
-     * or return false.
+     * Return port from conf.
+     * No need to return a boolean since conf is assumed to have been validated
+     * by the time this is called.
      */
-    bool build(const NginxConfig &config, Config *&conf);
+    static unsigned short GetPort(const NginxConfig *conf);
+
+    /*
+     * Given a request, find the handler with the longest matching URI prefix
+     * and return the NginxConfigStatement corresponding to that block.
+     */
+    static bool GetHandlerInfo(const NginxConfig *conf,
+        const Request *req, NginxConfigStatement *&info);
+
+    /*
+     * Return NginxConfigStatement corresponding to each handler.
+     */
+    static void GetAllHandlerInfo(const NginxConfig *conf,
+        std::list<NginxConfigStatement const *> &info);
 
   private:
-
-    /*
-     * Set port. Only fail if port is out of the range [1, 65535].
-     */
-    bool setPort(int port);
-
-    /*
-     * Add entry to echo_uri. Fail if uri is already defined.
-     */
-    bool addEchoUri(std::string uri);
-
-    /*
-     * Add entry to file_uri_mappings. Fail if URI is already defined.
-     */
-    bool addFileUriMapping(std::string uri, std::string path);
-
-    /*
-     * Generate config object. Fail only if port is not set.
-     */
-    bool build(Config *&config);
-
-    int port_;
-    /*
-     * URIs at which the server will simply echo requests, e.g. "/echo".
-     */
-    std::unordered_set<std::string> echo_uris_;
-    /*
-     * URI-path pairs at which the server will serve files. For example, the
-     * tuple ("/static", "/var/www/html") will cause the server to serve
-     * requests like "GET /static/index.html HTTP/1.0" from
-     * /var/www/static/index.html.
-     */
-    std::unordered_map<std::string, std::string> file_uri_mappings_;
+    Config() {}
 };
 
 #endif

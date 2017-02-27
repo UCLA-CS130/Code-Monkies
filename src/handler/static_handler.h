@@ -13,8 +13,9 @@ class StaticHandler : public RequestHandler {
 private:
 	std::string root_;
 
-	// TODO: TEMPORARY MEASURE TO PASS TESTS
-	std::string file_path_;
+  std::string uri_prefix_;
+
+  NginxConfig const *conf_;
 
 public:
 	virtual ~StaticHandler() {}
