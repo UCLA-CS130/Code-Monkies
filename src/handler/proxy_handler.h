@@ -18,11 +18,6 @@ public:
 
   	virtual Status HandleRequest(const Request& request,
                                  Response* response);
-  
-    Request createRequestFromRequest(const Request& request);
-    void send_something(std::string host_name, int port, std::string message);
-    std::string handle_resolve_query(std::string host_name);
-
 private:
   std::string uri_prefix_;
   NginxConfig const *conf_;
@@ -30,6 +25,9 @@ private:
       handler_block_statements,
       std::string& host_str,
       std::string target);
+  Request CreateProxyRequestFromClientRequest(const Request& request);
+  void send_something(std::string host_name, int port, std::string message);
+  std::string HandleResolveQuery(std::string host_name);
 };
 
 REGISTER_REQUEST_HANDLER(ProxyHandler);

@@ -53,20 +53,22 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request,
   if (host_name == "" || host_port == "") {
     printf("Invalid config\n");
     return RequestHandler::Status::GENERIC_ERROR;
-  } else {
-    printf("Host_name: %s, Host_port: %s", host_name.c_str(), host_port.c_str());
   }
 
-  printf("DNS RESULT: %s\n", handle_resolve_query(host_name).c_str());
+  Request proxy_req = CreateProxyRequestFromClientRequest(request);
 
 	return RequestHandler::Status::OK;
 }
 
 
-Request createRequestFromRequest(const Request& request){
+Request ProxyHandler::CreateProxyRequestFromClientRequest(const Request& request){
   Request* new_request = new Request();
   new_request->SetMethod(request.method());
-  new_request->SetUri(request.uri());
+
+  std::string proxy_uri = request.uri();
+  proxy_uri.erase(0, uri_prefix_.length());
+
+  new_request->SetUri(proxy_uri);
   new_request->SetVersion(request.version());
   new_request->SetHeaders(request.headers());
   new_request->SetBody(request.body());
@@ -77,7 +79,7 @@ Request createRequestFromRequest(const Request& request){
 void ProxyHandler::send_something(std::string host_name, int port, std::string message){
   boost::asio::io_service ios;
 
-  std::string host_ip = handle_resolve_query(host_name);
+  std::string host_ip = HandleResolveQuery(host_name);
 //  printf("host: %s", host_ip.c_str());
   (void) port;
   (void) message;
@@ -98,7 +100,7 @@ void ProxyHandler::send_something(std::string host_name, int port, std::string m
 }
 
 // inspired by http://stackoverflow.com/questions/5486113/how-to-turn-url-into-ip-address-using-boostasio
-std::string ProxyHandler::handle_resolve_query(std::string host_name) {
+std::string ProxyHandler::HandleResolveQuery(std::string host_name) {
   boost::asio::io_service io_service;
   boost::asio::ip::tcp::resolver resolver(io_service);
   boost::asio::ip::tcp::resolver::query query(host_name, "");
