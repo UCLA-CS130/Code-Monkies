@@ -3,6 +3,7 @@
 
 #include "api/request_handler.h"
 #include <string>
+#include<boost/asio.hpp>
 
 #define HOST_NAME_ID "host"
 #define HOST_PORT_ID "host_port"
@@ -17,6 +18,10 @@ public:
 
   	virtual Status HandleRequest(const Request& request,
                                  Response* response);
+  
+    Request createRequestFromRequest(const Request& request);
+    void send_something(std::string host_name, int port, std::string message);
+    std::string handle_resolve_query(std::string host_name);
 
 private:
   std::string uri_prefix_;

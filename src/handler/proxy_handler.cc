@@ -44,7 +44,7 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request,
 
   std::string host_name = "";
   std::string host_port = "";
-
+  
   (void) response;
 
   SetHostValues(handler_block_statements, host_name, HOST_NAME_ID);
@@ -59,3 +59,55 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request,
 
 	return RequestHandler::Status::OK;
 }
+
+
+Request createRequestFromRequest(const Request& request){
+  Request* new_request = new Request();
+  new_request->SetMethod(request.method());
+  new_request->SetUri(request.uri());
+  new_request->SetVersion(request.version());
+  new_request->SetHeaders(request.headers());
+  new_request->SetBody(request.body());
+  return *new_request;
+}
+
+// inspired by https://gist.github.com/bechu/2423333
+void ProxyHandler::send_something(std::string host_name, int port, std::string message){
+  boost::asio::io_service ios;
+  
+  std::string host_ip = handle_resolve_query(host_name);
+//  printf("host: %s", host_ip.c_str());
+  (void) port;
+  (void) message;
+//  boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address::from_string(host_ip), port);
+//  
+//  boost::asio::ip::tcp::socket socket(ios);
+//  
+//  socket.connect(endpoint);
+//  
+//  boost::array<char, 128> buf;
+//  std::copy(message.begin(),message.end(),buf.begin());
+//  boost::system::error_code error;
+//  socket.write_some(boost::asio::buffer(buf, message.size()), error);
+  
+  // TODO: get response
+  
+//  socket.close();
+}
+
+// inspired by http://stackoverflow.com/questions/5486113/how-to-turn-url-into-ip-address-using-boostasio
+std::string ProxyHandler::handle_resolve_query(std::string host_name) {
+  boost::asio::io_service io_service;
+  boost::asio::ip::tcp::resolver resolver(io_service);
+  boost::asio::ip::tcp::resolver::query query(host_name, "");
+  for(boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
+      i != boost::asio::ip::tcp::resolver::iterator();
+      ++i)
+  {
+    boost::asio::ip::tcp::endpoint end = *i;
+    
+    return end.address().to_string();
+  }
+  return "";
+}
+
