@@ -2,8 +2,11 @@
 #define PROXY_HANDLER_H
 
 #include "api/request_handler.h"
+#include <string>
 
-// Echos a request with Content-Type: text/plain
+#define HOST_NAME_ID "host"
+#define HOST_PORT_ID "host_port"
+
 class ProxyHandler : public RequestHandler
 {
 public:
@@ -14,6 +17,14 @@ public:
 
   	virtual Status HandleRequest(const Request& request,
                                  Response* response);
+
+private:
+  std::string uri_prefix_;
+  NginxConfig const *conf_;
+  void SetHostValues(std::vector<std::shared_ptr<NginxConfigStatement>>
+      handler_block_statements,
+      std::string& host_str,
+      std::string target);
 };
 
 REGISTER_REQUEST_HANDLER(ProxyHandler);

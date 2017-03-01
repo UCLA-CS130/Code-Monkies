@@ -10,6 +10,11 @@ path /echo EchoHandler {}
 
 path /status StatusHandler {}
 
+path /proxy ProxyHandler {
+  host www.ucla.edu;
+  host_port 8080;
+}
+
 # Default response handler if no handlers match.
 # TODO this doesn't work yet
 default NotFoundHandler {}

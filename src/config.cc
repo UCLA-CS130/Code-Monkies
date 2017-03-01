@@ -93,6 +93,29 @@ bool Config::Validate(const NginxConfig *conf)
           return false;
         }
         uri_prefixes.emplace(statement->tokens_[1]);
+      } else if (statement->tokens_[2] == "ProxyHandler") {
+        if (statement->child_block_ == NULL ||
+            statement->child_block_->statements_.size() != 2) {
+          debugf("Config::Validate", "Expected child block with exactly two "
+              "statements for ProxyHandler.\n");
+          return false;
+        }
+
+        for (auto tuple : statement->child_block_->statements_) {
+          if (tuple->tokens_.size() != 2) {
+            debugf("Config::Validate", "Invalid serve tuple: has length "
+                "%lu, should have length 2.\n", tuple->tokens_.size());
+            return false;
+          }
+          if (tuple->tokens_[0] != "host" && tuple->tokens_[0] != "host_port") {
+            debugf("Config::Validate", "Unexpected token in ProxyHandler "
+                "block: got %s, expected host or host_port.\n",
+                tuple->tokens_[0].c_str());
+            return false;
+          }
+        }
+
+        uri_prefixes.emplace(statement->tokens_[1]);
       } else {
         debugf("Config::Validate", "Unrecognized handler: %s.\n",
             statement->tokens_[2].c_str());
@@ -137,6 +160,7 @@ bool Config::GetHandlerInfo(const NginxConfig *conf,
   std::string uri = req->uri();
   for (auto const& stmt : conf->statements_) {
     if (stmt->tokens_[0] == "path") {
+      printf("Token 0: %s, Token 1: %s\n", stmt->tokens_[0].c_str(), stmt->tokens_[1].c_str());
       if (uri.find(stmt->tokens_[1]) == 0 &&
           longest_prefix.size() < stmt->tokens_[1].size()) {
         longest_prefix = stmt->tokens_[1];

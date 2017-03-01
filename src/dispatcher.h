@@ -24,6 +24,8 @@ class Dispatcher
           RequestHandler::CreateByName("StaticHandler"));
       handler_map_.emplace("NotFoundHandler",
           RequestHandler::CreateByName("NotFoundHandler"));
+      handler_map_.emplace("ProxyHandler",
+          RequestHandler::CreateByName("ProxyHandler"));
     }
 
     /*
