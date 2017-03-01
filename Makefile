@@ -8,7 +8,7 @@
 # Project-wide compiler settings.
 export CXX=g++
 export CXXFLAGS=-c -std=c++11 -Wall -Wextra -Werror
-export LDFLAGS=-lgcov --coverage -lboost_system
+export LDFLAGS=-lgcov --coverage -lboost_system -lpthread
 export DEBUG_FLAGS=-DDEBUG -g
 
 ifdef VERBOSE

@@ -44,7 +44,7 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request,
 
   std::string host_name = "";
   std::string host_port = "";
-  
+
   (void) response;
 
   SetHostValues(handler_block_statements, host_name, HOST_NAME_ID);
@@ -56,6 +56,8 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request,
   } else {
     printf("Host_name: %s, Host_port: %s", host_name.c_str(), host_port.c_str());
   }
+
+  printf("DNS RESULT: %s\n", handle_resolve_query(host_name).c_str());
 
 	return RequestHandler::Status::OK;
 }
@@ -74,24 +76,24 @@ Request createRequestFromRequest(const Request& request){
 // inspired by https://gist.github.com/bechu/2423333
 void ProxyHandler::send_something(std::string host_name, int port, std::string message){
   boost::asio::io_service ios;
-  
+
   std::string host_ip = handle_resolve_query(host_name);
 //  printf("host: %s", host_ip.c_str());
   (void) port;
   (void) message;
 //  boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address::from_string(host_ip), port);
-//  
+//
 //  boost::asio::ip::tcp::socket socket(ios);
-//  
+//
 //  socket.connect(endpoint);
-//  
+//
 //  boost::array<char, 128> buf;
 //  std::copy(message.begin(),message.end(),buf.begin());
 //  boost::system::error_code error;
 //  socket.write_some(boost::asio::buffer(buf, message.size()), error);
-  
+
   // TODO: get response
-  
+
 //  socket.close();
 }
 
@@ -105,9 +107,8 @@ std::string ProxyHandler::handle_resolve_query(std::string host_name) {
       ++i)
   {
     boost::asio::ip::tcp::endpoint end = *i;
-    
+
     return end.address().to_string();
   }
   return "";
 }
-
