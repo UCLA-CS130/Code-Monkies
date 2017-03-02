@@ -46,7 +46,7 @@ test: lib
 
 .PHONY: int-test
 int-test: test
-	scripts/integration.sh
+	scripts/integration.sh && scripts/multithread_test.sh
 
 .PHONY: gcov
 gcov: test
