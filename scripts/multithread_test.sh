@@ -67,7 +67,7 @@ curl --silent localhost:${PORT}/delay >> $OUTPUT_FILE &
 curl --silent localhost:${PORT}/echo >> $OUTPUT_FILE
 
 # Wait for delay call to finish
-sleep 5
+sleep 10
 
 EXPECTED_OUTPUT=`echo "GET /echo HTTP/1.1\r\nUser-Agent: curl/7.35.0\r\nHost: localhost:8080\r\nAccept: */*\r\n\r\nResponse delayed by 5 seconds"`
 ACTUAL_OUTPUT=`cat $OUTPUT_FILE`
