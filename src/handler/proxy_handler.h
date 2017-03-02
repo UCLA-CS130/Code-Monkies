@@ -26,8 +26,8 @@ private:
       std::string& host_str,
       std::string target);
   Request CreateProxyRequestFromClientRequest(const Request& request);
-  void send_something(std::string host_name, int port, std::string message);
-  std::string HandleResolveQuery(std::string host_name);
+  void IssueProxyRequestAndGetResponse(std::string host_name,
+    std::string port_num, const Request& request, Response* response);
 };
 
 REGISTER_REQUEST_HANDLER(ProxyHandler);

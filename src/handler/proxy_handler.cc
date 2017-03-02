@@ -1,5 +1,8 @@
 #include "handler/proxy_handler.h"
 #include "config.h"
+#include <fstream>
+
+using boost::asio::ip::tcp;
 
 RequestHandler::Status ProxyHandler::Init(const std::string& uri_prefix,
             const NginxConfig& config) {
@@ -57,16 +60,26 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request,
 
   Request proxy_req = CreateProxyRequestFromClientRequest(request);
 
+//  printf("Sending request\n%s\n", proxy_req.raw_request().c_str());
+
+  IssueProxyRequestAndGetResponse(host_name, host_port, proxy_req, response);
+  printf("Request done!\n");
 	return RequestHandler::Status::OK;
 }
 
 
-Request ProxyHandler::CreateProxyRequestFromClientRequest(const Request& request){
+Request ProxyHandler::CreateProxyRequestFromClientRequest(
+  const Request& request){
+
   Request* new_request = new Request();
   new_request->SetMethod(request.method());
 
   std::string proxy_uri = request.uri();
   proxy_uri.erase(0, uri_prefix_.length());
+
+  if (proxy_uri == "") {
+    proxy_uri = "/";
+  }
 
   new_request->SetUri(proxy_uri);
   new_request->SetVersion(request.version());
@@ -75,42 +88,37 @@ Request ProxyHandler::CreateProxyRequestFromClientRequest(const Request& request
   return *new_request;
 }
 
-// inspired by https://gist.github.com/bechu/2423333
-void ProxyHandler::send_something(std::string host_name, int port, std::string message){
-  boost::asio::io_service ios;
+// https://gist.github.com/vladon/8b487e41cb3b49e172db
+std::string buffer_to_string(const boost::asio::streambuf &buffer) {
+  using boost::asio::buffers_begin;
 
-  std::string host_ip = HandleResolveQuery(host_name);
-//  printf("host: %s", host_ip.c_str());
-  (void) port;
-  (void) message;
-//  boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address::from_string(host_ip), port);
-//
-//  boost::asio::ip::tcp::socket socket(ios);
-//
-//  socket.connect(endpoint);
-//
-//  boost::array<char, 128> buf;
-//  std::copy(message.begin(),message.end(),buf.begin());
-//  boost::system::error_code error;
-//  socket.write_some(boost::asio::buffer(buf, message.size()), error);
-
-  // TODO: get response
-
-//  socket.close();
+  auto bufs = buffer.data();
+  std::string result(buffers_begin(bufs), buffers_begin(bufs) + buffer.size());
+  return result;
 }
 
-// inspired by http://stackoverflow.com/questions/5486113/how-to-turn-url-into-ip-address-using-boostasio
-std::string ProxyHandler::HandleResolveQuery(std::string host_name) {
-  boost::asio::io_service io_service;
-  boost::asio::ip::tcp::resolver resolver(io_service);
-  boost::asio::ip::tcp::resolver::query query(host_name, "");
-  for(boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
-      i != boost::asio::ip::tcp::resolver::iterator();
-      ++i)
-  {
-    boost::asio::ip::tcp::endpoint end = *i;
+void ProxyHandler::IssueProxyRequestAndGetResponse(std::string host_name,
+  std::string port_num, const Request& request, Response* response) {
+    (void) response;
+    (void) request;
 
-    return end.address().to_string();
-  }
-  return "";
+  boost::asio::io_service io_service;
+  tcp::resolver resolver(io_service);
+
+  tcp::socket sock(io_service);
+  boost::asio::ip::tcp::resolver::query query(host_name, port_num);
+  tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+
+  //boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
+  //boost::asio::ip::tcp::endpoint end = *i;
+  //printf("Endpoint: %s", end.address().to_string().c_str());
+  boost::asio::connect(sock, endpoint_iterator);
+/*
+  // send request
+  write(sock, boost::asio::buffer(request.raw_request()));
+
+  boost::asio::streambuf response_buff;
+  size_t len = read_until(sock, response_buff, boost::asio::error::eof);
+
+  printf("Response received: it is\n%s", buffer_to_string(response_buff).c_str());*/
 }
