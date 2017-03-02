@@ -22,6 +22,8 @@ path /echo EchoHandler {}
 
 path /status StatusHandler {}
 
+path /delay DelayHandler {}
+
 # Default response handler if no handlers match.
 # TODO this doesnt work yet
 default NotFoundHandler {}
