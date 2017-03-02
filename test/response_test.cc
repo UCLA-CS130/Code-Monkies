@@ -59,3 +59,16 @@ TEST_F(ResponseTest, buildFullResponse) {
 		expectedResponse
 	);
 }
+
+TEST_F(ResponseTest, parseFromRawResponse) {
+  std::string rawResponse = \
+		"HTTP/1.1 200 OK\r\n"
+		"Content-Type: application/json\r\n"
+		"Cache-Control: max-age=60\r\n\r\n"
+		"{\"key\": 5}";
+  response_->Parse(rawResponse);
+  EXPECT_EQ(rawResponse, response_->ToString());
+  EXPECT_EQ("HTTP/1.1", response_->version());
+  EXPECT_EQ("200 OK", response_->status_message());
+  EXPECT_EQ("{\"key\": 5}", response_->body());
+}
