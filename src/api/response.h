@@ -32,8 +32,8 @@ public:
     };
   
     // for reverse proxy handler
-    std::unique_ptr<Response> Parse(const std::string& raw_response);
-    ResponseCode string_to_resp_code(const int status_code);
+    static std::unique_ptr<Response> Parse(const std::string& raw_response);
+    static ResponseCode string_to_resp_code(const int status_code);
   
     // Simple accesors
     std::string version() { return version_; }
