@@ -113,12 +113,15 @@ void ProxyHandler::IssueProxyRequestAndGetResponse(std::string host_name,
   //boost::asio::ip::tcp::endpoint end = *i;
   //printf("Endpoint: %s", end.address().to_string().c_str());
   boost::asio::connect(sock, endpoint_iterator);
-/*
+
   // send request
   write(sock, boost::asio::buffer(request.raw_request()));
 
   boost::asio::streambuf response_buff;
   size_t len = read_until(sock, response_buff, boost::asio::error::eof);
-
-  printf("Response received: it is\n%s", buffer_to_string(response_buff).c_str());*/
+  if (len) {
+    printf("Response received: it is\n%s\n", buffer_to_string(response_buff).c_str());
+  } else {
+    printf("ERROR!\n");
+  }
 }

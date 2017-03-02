@@ -12,7 +12,7 @@ path /status StatusHandler {}
 
 path /proxy ProxyHandler {
   host www.ucla.edu;
-  host_port 8080;
+  host_port 80;
 }
 
 # Default response handler if no handlers match.
