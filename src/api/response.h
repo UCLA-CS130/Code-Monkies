@@ -27,6 +27,7 @@ public:
 
     enum ResponseCode {
         HTTP_200_OK = 200,
+	HTTP_301_MOVED = 301,
         HTTP_302_FOUND = 302,
         HTTP_404_NOT_FOUND = 404
     };
@@ -39,7 +40,7 @@ public:
     std::string version() { return version_; }
     ResponseCode status() { return status_; }
     std::string status_message() { return status_message_; }
-    Headers headers() { return headers_; }
+    Headers headers() const { return headers_; }
     std::string body() { return body_; }
 
     // Simple mutators 

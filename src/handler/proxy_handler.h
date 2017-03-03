@@ -27,13 +27,21 @@ class ProxyHandler : public RequestHandler {
 		     std::string& host_str,
 		     std::string target);
 
-  std::unique_ptr<Request> CreateProxyRequestFromClientRequest(const Request& request);
+  std::unique_ptr<Request> CreateProxyRequestFromClientRequest(const Request& request,
+							       std::string host);
+
+  std::unique_ptr<Response> ForwardRequest(const Request& request,
+					  std::string host_name, 
+					  std::string port_num);
+
   void IssueProxyRequestAndGetResponse(std::string host_name,
 				       std::string port_num, 
 				       const Request& request, 
 				       Response* response);
   
+  void ProcessRemoteResponse(Response& response);
   void RewriteUrls(Response& res);
+  std::string GetMoveLocation(const Response& resp);
 };
 
 REGISTER_REQUEST_HANDLER(ProxyHandler);
