@@ -43,6 +43,7 @@ public:
     void SetUri(std::string uri) { uri_ = uri; }
     void SetVersion(std::string version) { version_ = version; }
     void SetHeaders(Headers headers) { headers_ = headers; }
+    void ReplaceHeader(std::string key, std::string value);
     void AddHeader(Header header) { headers_.push_back(header); }
     void SetBody(std::string body) { body_ = body; }
 };

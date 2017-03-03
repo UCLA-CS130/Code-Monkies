@@ -15,6 +15,11 @@ path /proxy ProxyHandler {
   host_port 80;
 }
 
+path /proxy2 ProxyHandler {
+  host www.minibittech.com;
+  host_port 80;
+}
+
 # Default response handler if no handlers match.
 # TODO this doesn't work yet
 default NotFoundHandler {}

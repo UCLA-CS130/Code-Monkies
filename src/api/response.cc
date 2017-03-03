@@ -6,7 +6,8 @@
 std::string Response::status_message_from_code(const ResponseCode& response_code) {
   switch (response_code) {
   case ResponseCode::HTTP_200_OK: return "200 OK";
-  case ResponseCode::HTTP_302_FOUND: return "302 FOUND";
+  case ResponseCode::HTTP_301_MOVED: return "301 Moved Permanently";
+  case ResponseCode::HTTP_302_FOUND: return "302 FOUND";    
   case ResponseCode::HTTP_404_NOT_FOUND: return "404 NOT_FOUND";
   default:
     throw std::invalid_argument("Invalid or unimplemented response code");
@@ -87,6 +88,8 @@ Response::ResponseCode Response::string_to_resp_code(const int status_code) {
   switch(status_code) {
   case 200:
     return ResponseCode::HTTP_200_OK;
+  case 301:
+    return ResponseCode::HTTP_301_MOVED;
   case 302:
     return ResponseCode::HTTP_302_FOUND;
   default:

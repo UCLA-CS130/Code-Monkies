@@ -73,3 +73,17 @@ std::string Request::raw_request() const {
 
   return raw_request_stream.str();
 }
+
+
+void Request::ReplaceHeader(std::string key, std::string value) {
+  std::vector<Header> fresh_headers;
+  for (auto header : headers_) {
+    if (header.first == key) {
+      fresh_headers.push_back(std::make_pair(key, value));
+    } else {
+      fresh_headers.push_back(header);
+    }
+  }
+
+  headers_ = fresh_headers;
+}
