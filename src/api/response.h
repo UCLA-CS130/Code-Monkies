@@ -53,6 +53,8 @@ public:
     {
       version_ = version;
     }
+    
+    void SetHeaders(std::vector<Header> headers) { headers_ = headers; }
 
     void AddHeader(const std::string& header_name, const std::string& header_value) 
     {

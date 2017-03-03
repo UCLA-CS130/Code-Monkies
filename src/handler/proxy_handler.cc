@@ -1,6 +1,7 @@
+#include <fstream>
+#include <boost/regex.hpp>
 #include "handler/proxy_handler.h"
 #include "config.h"
-#include <fstream>
 
 using boost::asio::ip::tcp;
 
@@ -67,29 +68,6 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request,
 }
 
 std::unique_ptr<Request> ProxyHandler::CreateProxyRequestFromClientRequest(const Request& request) {
-  std::unique_ptr<Request> new_request(new Request());
-  new_request->SetMethod(request.method());
-    
-  // Disable chunked HTTP/1.1 Encoding
-  new_request->SetVersion("HTTP/1.0");
-
-  // Disable gzip and Host headers
-  std::vector<Header> non_encoding_headers;
-  for (auto header : request.headers()) {
-    std::string key = header.first;    
-    if (key == "Accept-Encoding" ||
-	key == "Host" || 
-	key == "Connection" ||
-	key == "Cookie") {
-      continue;
-    }
-    
-    non_encoding_headers.push_back(header);
-  }
-  
-  // Close connection when done sending response
-  non_encoding_headers.push_back(std::make_pair("Connection", "close"));
-
   std::string proxy_uri = request.uri();
   proxy_uri.erase(0, uri_prefix_.length());
 
@@ -97,9 +75,16 @@ std::unique_ptr<Request> ProxyHandler::CreateProxyRequestFromClientRequest(const
     proxy_uri = "/";
   }
 
-  new_request->SetUri(proxy_uri);
-  new_request->SetHeaders(non_encoding_headers);
+  std::unique_ptr<Request> new_request(new Request());
+  new_request->SetMethod(request.method());
+  new_request->SetUri(proxy_uri);  
+  new_request->SetVersion("HTTP/1.0");  // Disable chunked HTTP/1.1 Encoding
   new_request->SetBody(request.body());
+
+  // Disable headers that make proxying difficult
+  std::vector<Header> non_encoding_headers;  
+  non_encoding_headers.push_back(std::make_pair("Connection", "close"));
+  new_request->SetHeaders(non_encoding_headers);
   return new_request;
 }
 
@@ -131,24 +116,55 @@ void ProxyHandler::IssueProxyRequestAndGetResponse(std::string host_name,
   std::cout << "Port: " << port_num << std::endl;
   std::cout << "Sending proxy request: " << std::endl << request.raw_request() << std::endl;
 
-  // send request
   write(sock, boost::asio::buffer(request.raw_request()));
- 
+  
+  // Lazy way to read response. Just read everything in and parse it later.
   std::string ser_resp = "";
   boost::system::error_code error;
   boost::asio::streambuf response_buff;
-  while (boost::asio::read(sock, response_buff,
-			   boost::asio::transfer_at_least(1), error)) {
-    ser_resp += buffer_to_string(response_buff);
-  }
+  while (boost::asio::read(sock, 
+			   response_buff,
+			   boost::asio::transfer_at_least(1), 
+			   error)) {}
   
   if (error != boost::asio::error::eof) {
     throw boost::system::system_error(error);
   }
+  
+  ser_resp = buffer_to_string(response_buff);
+  std::cout << "Ser resp: " << std::endl << ser_resp << std::endl;
 
-  std::cout << "Resp:" << std::endl << ser_resp << std::endl;
-  std::unique_ptr<Response> resp = Response::Parse(ser_resp);
-  *response = *resp;
+  std::unique_ptr<Response> resp = Response::Parse(ser_resp);  
+  
+  std::vector<Header> stripped_headers;
+  for (auto header : resp->headers()) {
+    std::string key = header.first;    
+    if (key != "Content-Type") {
+      continue;
+    }
 
+    stripped_headers.push_back(header);
+  }
+ 
+  resp->SetHeaders(stripped_headers);   
+
+  RewriteUrls(*resp);
+  *response = *resp;  
   sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+}
+
+void ProxyHandler::RewriteUrls(Response& resp) {
+  std::string body = resp.body();
+  
+  std::string reg_url = "\\s*=\\s*\"/?((?!http)[^\"]*)\"";
+
+  boost::regex r("src" + reg_url);
+  std::string fmt = "src=\"" + uri_prefix_ + "/\\1\"";
+
+  boost::regex r2("href" + reg_url);
+  std::string fmt2 = "href=\"" + uri_prefix_ + "/\\1\"";
+  
+  std::string replaced  = boost::regex_replace(body, r, fmt, boost::match_default | boost::format_sed);
+  body = boost::regex_replace(replaced, r2, fmt2, boost::match_default | boost::format_sed);
+  resp.SetBody(body);
 }

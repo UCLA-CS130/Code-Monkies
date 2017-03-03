@@ -32,6 +32,8 @@ class ProxyHandler : public RequestHandler {
 				       std::string port_num, 
 				       const Request& request, 
 				       Response* response);
+  
+  void RewriteUrls(Response& res);
 };
 
 REGISTER_REQUEST_HANDLER(ProxyHandler);

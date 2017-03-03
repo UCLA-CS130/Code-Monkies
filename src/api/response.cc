@@ -1,5 +1,6 @@
 #include "api/response.h"
 #include <stdexcept>
+#include <iostream>
 #include <sstream>
 
 std::string Response::status_message_from_code(const ResponseCode& response_code) {
@@ -74,11 +75,11 @@ std::unique_ptr<Response> Response::Parse(const std::string& raw_response) {
   
   std::getline(raw_response_stream, lineTemp, '\n');
   
-  std::string body;
-  std::getline(raw_response_stream, body, '\0');
-  raw_response_stream.clear();  
+  std::ostringstream remainder_stream;
+  remainder_stream << raw_response_stream.rdbuf();
+  
+  std::string body = remainder_stream.str();
   response->SetBody(body);  
-
   return response;
 }
 
