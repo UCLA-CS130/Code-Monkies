@@ -73,13 +73,18 @@ std::unique_ptr<Response> Response::Parse(const std::string& raw_response) {
     std::getline(raw_response_stream, header_string, '\r');
   }
   
+  std::string body;
   std::getline(raw_response_stream, lineTemp, '\n');
+  std::getline(raw_response_stream, body, '\0');
+  raw_response_stream.clear();
   
-  std::ostringstream remainder_stream;
-  remainder_stream << raw_response_stream.rdbuf();
-  
-  std::string body = remainder_stream.str();
-  response->SetBody(body);  
+//  std::ostringstream remainder_stream;
+//  remainder_stream << raw_response_stream.rdbuf();
+//  
+//  std::string body = remainder_stream.str();
+//  response->SetBody(body);
+  response->SetBody(body);
+
   return response;
 }
 
