@@ -56,6 +56,23 @@ good_response=$(printf '%b' "$good_response")
 
 response="$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/echo1)"
 
+# integration test for reverse proxy
+WEBSERVER_PORT 80;
+
+proxy_response = "$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/proxy)";
+not_proxy_response = "$(curl --silent -A "Mozilla/4.0" www.ucla.edu:${WEBSERVER_PORT})";
+
+if ["$proxy_response" != "$not_proxy_response"]; then
+  echo "Reverse Proxy Test failed - got different response than expected."
+  echo "Expected:"
+  printf '%s\n' "$proxy_response"
+  echo "Got:"
+  printf '%s\n' "$not_proxy_response"
+  EXIT_STATUS=1
+else
+  echo "Reverse Proxy Test Passed."
+fi
+
 if [ "$response" != "$good_response" ]; then
   echo "Test failed - got different response than expected."
   echo "Expected:"
