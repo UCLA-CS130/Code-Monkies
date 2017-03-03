@@ -49,18 +49,14 @@ fi
 # run server in background
 bin/webserver $CONFIG_FILE 2>&1 >/dev/null &
 
-good_response="GET /echo1 HTTP/1.1\r\nUser-Agent: Mozilla/4.0\r\n"
-good_response="${good_response}Host: localhost:8080\r\nAccept: */*\r\n\r\n"
-# turn C-style escape sequences into actual carriage returns and newlines
-good_response=$(printf '%b' "$good_response")
-
-response="$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/echo1)"
-
 # integration test for reverse proxy
 WEBSERVER_PORT 80;
 
-proxy_response = "$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/proxy)";
-not_proxy_response = "$(curl --silent -A "Mozilla/4.0" www.ucla.edu:${WEBSERVER_PORT})";
+proxy_response="$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/echo1)"
+echo "$proxy_response"
+
+not_proxy_response="$(curl --silent -A "Mozilla/4.0" www.ucla.edu:${WEBSERVER_PORT})"
+echo "$not_proxy_response"
 
 if ["$proxy_response" != "$not_proxy_response"]; then
   echo "Reverse Proxy Test failed - got different response than expected."
@@ -72,6 +68,13 @@ if ["$proxy_response" != "$not_proxy_response"]; then
 else
   echo "Reverse Proxy Test Passed."
 fi
+
+good_response="GET /echo1 HTTP/1.1\r\nUser-Agent: Mozilla/4.0\r\n"
+good_response="${good_response}Host: localhost:8080\r\nAccept: */*\r\n\r\n"
+# turn C-style escape sequences into actual carriage returns and newlines
+good_response=$(printf '%b' "$good_response")
+
+response="$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/echo1)"
 
 if [ "$response" != "$good_response" ]; then
   echo "Test failed - got different response than expected."
