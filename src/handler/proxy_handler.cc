@@ -70,7 +70,9 @@ RequestHandler::Status ProxyHandler::HandleRequest(const Request& request,
 std::unique_ptr<Request> ProxyHandler::CreateProxyRequestFromClientRequest(const Request& request,
 									   std::string host) {
   std::string proxy_uri = request.uri();
-  proxy_uri.erase(0, uri_prefix_.length());
+  if (uri_prefix_ != "/") {
+    proxy_uri.erase(0, uri_prefix_.length());
+  }
 
   if (proxy_uri == "") {
     proxy_uri = "/";
@@ -135,7 +137,6 @@ std::unique_ptr<Response> ProxyHandler::ForwardRequest(const Request& request,
   write(sock, boost::asio::buffer(request.raw_request()));
   
   std::string ser_resp = read_socket(&sock);
-  std::cout << ser_resp << std::endl;
   std::unique_ptr<Response> resp = Response::Parse(ser_resp);  
   return resp;
 }
@@ -147,8 +148,7 @@ void ProxyHandler::IssueProxyRequestAndGetResponse(std::string host_name,
 						   Response* response) {  
   std::unique_ptr<Response> forward_resp = ForwardRequest(request, host_name, port_num);
   if (forward_resp->status() == Response::HTTP_301_MOVED ||
-      forward_resp->status() == Response::HTTP_302_FOUND) {      
-    
+      forward_resp->status() == Response::HTTP_302_FOUND) {          
     std::string move_loc = GetMoveLocation(*forward_resp);
 
     Request req_copy = request;
@@ -165,32 +165,25 @@ void ProxyHandler::IssueProxyRequestAndGetResponse(std::string host_name,
 
 void ProxyHandler::ProcessRemoteResponse(Response& resp) {
   RewriteUrls(resp);
-
-  std::vector<Header> stripped_headers;
-  for (auto header : resp.headers()) {
-    std::string key = header.first;    
-    if (key != "Content-Type") {
-      continue;
-    }
-
-    stripped_headers.push_back(header);
-  }
-  
-
-  std::cout << "Response body size is " << resp.body().length() << std::endl;
-  //  resp.SetHeaders(stripped_headers);      
+  std::cout << resp.ToString() << std::endl;
 }
 
 void ProxyHandler::RewriteUrls(Response& resp) {
   std::string body = resp.body();
   
+  std::string prefix = uri_prefix_;
+  if (uri_prefix_.length() > 0 && 
+      uri_prefix_[uri_prefix_.length() - 1] == '/') {
+    prefix = "";
+  }
+
   std::string reg_url = "\\s*=\\s*\"/?((?!http)[^\"]*)\"";
 
   boost::regex r("src" + reg_url);
-  std::string fmt = "src=\"" + uri_prefix_ + "/\\1\"";
+  std::string fmt = "src=\"" + prefix + "/\\1\"";
 
   boost::regex r2("href" + reg_url);
-  std::string fmt2 = "href=\"" + uri_prefix_ + "/\\1\"";
+  std::string fmt2 = "href=\"" + prefix + "/\\1\"";
   
   std::string replaced = boost::regex_replace(body, r, fmt, boost::match_default | boost::format_sed);
   body = boost::regex_replace(replaced, r2, fmt2, boost::match_default | boost::format_sed);

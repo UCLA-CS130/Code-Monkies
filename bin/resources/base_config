@@ -2,18 +2,18 @@
 
 port 8080;  # This is also a comment.
 
-path / StaticHandler {
+path / ProxyHandler { # Needs to be empty path for instructor submission
+  host www.ucla.edu;
+  host_port 80;
+}
+
+path /static StaticHandler {
   root /opt/static;
 }
 
 path /echo EchoHandler {}
 
 path /status StatusHandler {}
-
-path /proxy ProxyHandler {
-  host www.ucla.edu;
-  host_port 80;
-}
 
 path /proxy2 ProxyHandler {
   host www.minibittech.com;

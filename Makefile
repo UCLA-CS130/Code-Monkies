@@ -46,10 +46,10 @@ test: lib
 
 .PHONY: int-test
 int-test: test
-	scripts/integration.sh && scripts/multithread_test.sh
+	scripts/integration.sh && scripts/multithread_test.sh && scripts/proxy_integration_test.sh
 
 .PHONY: proxy-test
-proxy-test: lib
+proxy-test: lib		
 	scripts/proxy_integration_test.sh
 
 .PHONY: gcov
