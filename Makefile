@@ -8,7 +8,7 @@
 # Project-wide compiler settings.
 export CXX=g++
 export CXXFLAGS=-c -std=c++11 -Wall -Wextra -Werror
-export LDFLAGS=-lgcov --coverage -lboost_system -lboost_thread
+export LDFLAGS=-lgcov --coverage -lboost_system -lboost_thread -lboost_regex -lpthread
 export DEBUG_FLAGS=-DDEBUG -g
 
 ifdef VERBOSE
@@ -44,9 +44,23 @@ test: lib
 	$(MAKE) -C test
 	cd bin && ./webserver_tests
 
+.PHONY: proxy-test
+proxy-test: lib
+	$(MAKE) -C src test
+	$(MAKE) -C test
+	cd bin && ./proxy_webserver_tests
+
 .PHONY: int-test
 int-test: test
-	scripts/integration.sh && scripts/multithread_test.sh
+	scripts/integration.sh && scripts/multithread_test.sh && scripts/proxy_integration_test.sh
+
+.PHONY: proxy-int-test
+proxy-int-test: lib		
+	scripts/proxy_integration_test.sh
+
+.PHONY: proxy-302-test
+proxy-302-test: lib
+	scripts/proxy_302_test.sh
 
 .PHONY: gcov
 gcov: test

@@ -7,161 +7,186 @@ using helpers::debugf;
 
 bool Config::Validate(const NginxConfig *conf)
 {
-    std::unordered_set<std::string> uri_prefixes; // all uri prefixes defined in
-            // conf. used to ensure that a uri prefix doesn't get assigned two
-            // handlers
-    bool gotPort = false;
+  std::unordered_set<std::string> uri_prefixes; // all uri prefixes defined in
+  // conf. used to ensure that a uri prefix doesn't get assigned two
+  // handlers
+  bool gotPort = false;
 
-    for (auto const& statement :
-            conf->statements_) {
-        size_t len = statement->tokens_.size();
+  for (auto const& statement :
+	 conf->statements_) {
+    size_t len = statement->tokens_.size();
 
-        if (len == 0) {
-            debugf("Config::Validate", "Invalid configuration file.\n");
-            return false;
+    if (len == 0) {
+      debugf("Config::Validate", "Invalid configuration file.\n");
+      return false;
 
-        } else if (len == 2) {
-            /*
-             * Must be a port number
-             */
-            if (statement->tokens_[0] == "port") {
-                // TODO this has to exist somewhere in the C stdlib / STL...
-                for (auto const& c : statement->tokens_[1]) {
-                    if (!isdigit(c)) {
-                        debugf("Config::Validate", "Invalid character in port: %c.\n", c);
-                        return false;
-                    }
-                }
-                long port = strtol(statement->tokens_[1].c_str(), nullptr, 10);
-                if (gotPort ||
-                        (port < 1 || port > PORT_MAX)) {
-                    debugf("Config::Validate", "Received invalid or duplicate port.\n");
-                    return false;
-                }
-                gotPort = true;
-            } else if (statement->tokens_[0] == "default") {
-                continue; // not much to do here
-            } else {
-                debugf("Config::Validate", "Unexpected inner statement: %s.\n",
-                        statement->ToString(0).c_str());
-                return false;
-            }
+    } else if (len == 2) {
+      /*
+       * Must be a port number
+       */
+      if (statement->tokens_[0] == "port") {
+	// TODO this has to exist somewhere in the C stdlib / STL...
+	for (auto const& c : statement->tokens_[1]) {
+	  if (!isdigit(c)) {
+	    debugf("Config::Validate", "Invalid character in port: %c.\n", c);
+	    return false;
+	  }
+	}
+	long port = strtol(statement->tokens_[1].c_str(), nullptr, 10);
+	if (gotPort ||
+	    (port < 1 || port > PORT_MAX)) {
+	  debugf("Config::Validate", "Received invalid or duplicate port.\n");
+	  return false;
+	}
+	gotPort = true;
+      } else if (statement->tokens_[0] == "default") {
+	continue; // not much to do here
+      } else {
+	debugf("Config::Validate", "Unexpected inner statement: %s.\n",
+	       statement->ToString(0).c_str());
+	return false;
+      }
 
-        } else if (len == 3) {
-            if (statement->tokens_[0] != "path") {
-                debugf("Config::Validate", "Unexpected 3-token statement: %s.\n",
-                        statement->ToString(0).c_str());
-                return false;
-            }
+    } else if (len == 3) {
+      if (statement->tokens_[0] != "path") {
+	debugf("Config::Validate", "Unexpected 3-token statement: %s.\n",
+	       statement->ToString(0).c_str());
+	return false;
+      }
 
-            if (statement->tokens_[2] == "StaticHandler") {
-                if (statement->child_block_ == NULL ||
-                        statement->child_block_->statements_.size() != 1) {
-                    debugf("Config::Validate", "Expected child block with exactly one "
-                            "statement for StaticHandler.\n");
-                    return false;
-                }
-                auto tuple = statement->child_block_->statements_[0];
-                if (tuple->tokens_.size() != 2) {
-                    debugf("Config::Validate", "Invalid serve tuple: has length "
-                            "%lu, should have length 2.\n", tuple->tokens_.size());
-                    return false;
-                }
-                if (tuple->tokens_[0] != "root") {
-                    debugf("Config::Validate", "Unexpected token in StaticHandler "
-                            "block: got %s, expected root.\n", tuple->tokens_[0].c_str());
-                    return false;
-                }
-                if (uri_prefixes.find(statement->tokens_[1]) != uri_prefixes.end()) {
-                    debugf("Config::Validate", "Duplicate URI prefix. Prefix: %s.\n",
-                            statement->tokens_[1].c_str());
-                    return false;
-                }
-                uri_prefixes.emplace(statement->tokens_[1]);
+      if (statement->tokens_[2] == "StaticHandler") {
+	if (statement->child_block_ == NULL ||
+	    statement->child_block_->statements_.size() != 1) {
+	  debugf("Config::Validate", "Expected child block with exactly one "
+		 "statement for StaticHandler.\n");
+	  return false;
+	}
+	auto tuple = statement->child_block_->statements_[0];
+	if (tuple->tokens_.size() != 2) {
+	  debugf("Config::Validate", "Invalid serve tuple: has length "
+		 "%lu, should have length 2.\n", tuple->tokens_.size());
+	  return false;
+	}
+	if (tuple->tokens_[0] != "root") {
+	  debugf("Config::Validate", "Unexpected token in StaticHandler "
+		 "block: got %s, expected root.\n", tuple->tokens_[0].c_str());
+	  return false;
+	}
+	if (uri_prefixes.find(statement->tokens_[1]) != uri_prefixes.end()) {
+	  debugf("Config::Validate", "Duplicate URI prefix. Prefix: %s.\n",
+		 statement->tokens_[1].c_str());
+	  return false;
+	}
+	uri_prefixes.emplace(statement->tokens_[1]);
 
-            } else if (statement->tokens_[2] == "EchoHandler" ||
+      } else if (statement->tokens_[2] == "EchoHandler" ||
                     statement->tokens_[2] == "StatusHandler" ||
-                    statement->tokens_[2] == "DelayHandler") {
-                if (statement->child_block_->statements_.size() != 0) {
-                    debugf("Config::Validate", "Expected empty child block for "
-                            "EchoHandler/StatusHandler.\n");
-                    return false;
-                }
+		 statement->tokens_[2] == "DelayHandler") {
+	if (statement->child_block_->statements_.size() != 0) {
+	  debugf("Config::Validate", "Expected empty child block for "
+		 "EchoHandler/StatusHandler.\n");
+	  return false;
+	}
 
-                if (uri_prefixes.find(statement->tokens_[1]) != uri_prefixes.end()) {
-                    debugf("Config::Validate", "Duplicate URI prefix. Prefix: %s.\n",
-                            statement->tokens_[1].c_str());
-                    return false;
-                }
-                uri_prefixes.emplace(statement->tokens_[1]);
-            } else {
-                debugf("Config::Validate", "Unrecognized handler: %s.\n",
-                        statement->tokens_[2].c_str());
-                return false;
-            }
-        } else {
-            debugf("Config::Validate", "Unexpected inner statement: %s.\n",
-                    statement->ToString(0).c_str());
-            return false;
-        }
+	if (uri_prefixes.find(statement->tokens_[1]) != uri_prefixes.end()) {
+	  debugf("Config::Validate", "Duplicate URI prefix. Prefix: %s.\n",
+		 statement->tokens_[1].c_str());
+	  return false;
+	}
+	uri_prefixes.emplace(statement->tokens_[1]);
+      } else if (statement->tokens_[2] == "ProxyHandler") {
+	if (statement->child_block_ == NULL ||
+	    statement->child_block_->statements_.size() != 2) {
+	  debugf("Config::Validate", "Expected child block with exactly two "
+		 "statements for ProxyHandler.\n");
+	  return false;
+	}
+
+	for (auto tuple : statement->child_block_->statements_) {
+	  if (tuple->tokens_.size() != 2) {
+	    debugf("Config::Validate", "Invalid serve tuple: has length "
+		   "%lu, should have length 2.\n", tuple->tokens_.size());
+	    return false;
+	  }
+	  if (tuple->tokens_[0] != "host" && tuple->tokens_[0] != "host_port") {
+	    debugf("Config::Validate", "Unexpected token in ProxyHandler "
+		   "block: got %s, expected host or host_port.\n",
+		   tuple->tokens_[0].c_str());
+	    return false;
+	  }
+	}
+
+	uri_prefixes.emplace(statement->tokens_[1]);
+      } else {
+	debugf("Config::Validate", "Unrecognized handler: %s.\n",
+	       statement->tokens_[2].c_str());
+	return false;
+      }
+    } else {
+      debugf("Config::Validate", "Unexpected inner statement: %s.\n",
+	     statement->ToString(0).c_str());
+      return false;
     }
+  }
 
-    if (!gotPort) {
-        debugf("Config::Validate", "No port specified in configuration file.\n");
-        return false;
-    }
+  if (!gotPort) {
+    debugf("Config::Validate", "No port specified in configuration file.\n");
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 unsigned short Config::GetPort(const NginxConfig *conf)
 {
-    for (auto const& stmt : conf->statements_) {
-        if (stmt->tokens_.size() == 2 && stmt->tokens_[0] == "port") {
-            // guaranteed to be within [1,65535] if Valid passed for NginxConfig
-            return (unsigned short) strtol(stmt->tokens_[1].c_str(), nullptr, 10);
-        }
+  for (auto const& stmt : conf->statements_) {
+    if (stmt->tokens_.size() == 2 && stmt->tokens_[0] == "port") {
+      // guaranteed to be within [1,65535] if Valid passed for NginxConfig
+      return (unsigned short) strtol(stmt->tokens_[1].c_str(), nullptr, 10);
     }
-    debugf("Config::GetPort", "Failed to get port from config. This should "
-            "never happen.\n");
-    return 0;
+  }
+
+  debugf("Config::GetPort", "Failed to get port from config. This should "
+	 "never happen.\n");
+  return 0;
 }
 
 
 bool Config::GetHandlerInfo(const NginxConfig *conf,
-        const Request *req, NginxConfigStatement *&info)
+                            const Request *req, 
+                            NginxConfigStatement *&info)
 {
-    /*
-     * Look over req and conf to determine handler with longest matching prefix.
-     */
-    std::string longest_prefix;
-    std::string uri = req->uri();
-    for (auto const& stmt : conf->statements_) {
-        if (stmt->tokens_[0] == "path") {
-            if (uri.find(stmt->tokens_[1]) == 0 &&
-                    longest_prefix.size() < stmt->tokens_[1].size()) {
-                longest_prefix = stmt->tokens_[1];
-                info = stmt.get();
-            }
-        }
+  /*
+   * Look over req and conf to determine handler with longest matching prefix.
+   */
+  std::string longest_prefix;
+  std::string uri = req->uri();
+  for (auto const& stmt : conf->statements_) {
+    if (stmt->tokens_[0] == "path") {
+      if (uri.find(stmt->tokens_[1]) == 0 &&
+	  longest_prefix.size() < stmt->tokens_[1].size()) {
+	longest_prefix = stmt->tokens_[1];
+	info = stmt.get();
+      }
     }
+  }
 
-    /*
-     * Nothing matches the given URI, so return false.
-     */
-    if (longest_prefix.size() == 0) {
-        return false;
-    }
+  /*
+   * Nothing matches the given URI, so return false.
+   */
+  if (longest_prefix.size() == 0) {
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 void Config::GetAllHandlerInfo(const NginxConfig *conf,
-        std::list<NginxConfigStatement const *> &info)
+			       std::list<NginxConfigStatement const *> &info)
 {
-    for (auto const& stmt : conf->statements_) {
-        if (stmt->tokens_[0] == "path" || stmt->tokens_[0] == "default") {
-            info.push_back(stmt.get());
-        }
+  for (auto const& stmt : conf->statements_) {
+    if (stmt->tokens_[0] == "path" || stmt->tokens_[0] == "default") {
+      info.push_back(stmt.get());
     }
+  }
 }

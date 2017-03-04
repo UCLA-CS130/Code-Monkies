@@ -16,6 +16,7 @@ TEST_DEP_OBJECTS=$(OBJ_DIR)/config_parser.o
 
 TEST_SOURCES=$(wildcard *.cc)
 TEST_OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(TEST_SOURCES))
+PROXY_TEST_OBJECT=$(OBJ_DIR)/proxy_handler_test.o
 
 SOURCES=$(wildcard $(SRC_DIR)/*.cc) \
 		$(wildcard $(SRC_DIR)/http/*.cc) \
@@ -26,11 +27,16 @@ SOURCES_NO_MAIN=$(filter-out $(SRC_DIR)/main.cc, $(SOURCES))
 SOURCE_OBJECTS=$(patsubst $(SRC_DIR)/%.cc,$(OBJ_DIR)/%.o,$(SOURCES_NO_MAIN))
 
 EXECUTABLE=$(BIN_DIR)/webserver_tests
+PROXY_HANDLER_EXECUTABLE=$(BIN_DIR)/proxy_webserver_tests
 
 .PHONY: all
-all: $(EXECUTABLE)
+all: $(EXECUTABLE) $(PROXY_HANDLER_EXECUTABLE)
 
 $(EXECUTABLE): $(TEST_OBJECTS) $(SOURCE_OBJECTS) $(TEST_DEP_OBJECTS)
+	echo $(SOURCE_OBJECTS)
+	$(CXX) $^ $(GTEST_LIBS) -o $@ $(TEST_LDFLAGS)
+
+$(PROXY_HANDLER_EXECUTABLE): $(PROXY_TEST_OBJECT) $(SOURCE_OBJECTS) $(TEST_DEP_OBJECTS)
 	echo $(SOURCE_OBJECTS)
 	$(CXX) $^ $(GTEST_LIBS) -o $@ $(TEST_LDFLAGS)
 
