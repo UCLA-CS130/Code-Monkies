@@ -58,10 +58,9 @@ bin/webserver $CONFIG_FILE 2>&1 >/dev/null &
 
 # integration test for reverse proxy
 
-proxy_response="$(curl --silent -I localhost:${PORT}/proxy | head -n 1)"
-echo "$proxy_response"
+proxy_response="$(curl --silent -I localhost:${PORT}/proxy | head -n 1 | tr -d '\r\n')"
 
-if [ "$proxy_response" != "HTTP/1.1 200 OK\r\n" ]; then
+if [ "$proxy_response" != "HTTP/1.1 200 OK" ]; then
   echo "Reverse Proxy Test failed - got different response than expected."
   echo "$proxy_response"
   EXIT_STATUS=1
