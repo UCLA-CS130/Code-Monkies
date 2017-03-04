@@ -183,7 +183,7 @@ void ProxyHandler::RewriteUrls(Response& resp) {
   std::string fmt = "src=\"" + prefix + "/\\1\"";
 
   boost::regex r2("href" + reg_url); 
-  std::string fmt2 = "href=\"" + uri_prefix_ + "/\\1\"";
+  std::string fmt2 = "href=\"" + prefix + "/\\1\"";
 
   std::string replaced = boost::regex_replace(body, r, fmt, boost::match_default | boost::format_sed);
   body = boost::regex_replace(replaced, r2, fmt2, boost::match_default | boost::format_sed);
@@ -194,8 +194,7 @@ std::string ProxyHandler::GetMoveLocation(const Response& resp) {
   for (auto header : resp.headers()) {
     std::string key = header.first;
     if (key == "Location") {
-      std::string move_loc = header.second;
-			printf("NEW LOCATION: %s\n", move_loc.c_str());
+      std::string move_loc = header.second;	
       std::string http = "http://";
       std::string https = "https://";
 

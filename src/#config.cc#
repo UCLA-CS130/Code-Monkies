@@ -134,6 +134,8 @@ bool Config::Validate(const NginxConfig *conf)
     debugf("Config::Validate", "No port specified in configuration file.\n");
     return false;
   }
+
+  return true;
 }
 
 unsigned short Config::GetPort(const NginxConfig *conf)
