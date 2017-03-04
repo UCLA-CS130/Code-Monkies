@@ -22,6 +22,11 @@ path /echo EchoHandler {}
 
 path /status StatusHandler {}
 
+path /proxy ProxyHandler {
+  host www.ucla.edu;
+  host_port 80;
+}
+
 # Default response handler if no handlers match.
 # TODO this doesnt work yet
 default NotFoundHandler {}
@@ -50,20 +55,13 @@ fi
 bin/webserver $CONFIG_FILE 2>&1 >/dev/null &
 
 # integration test for reverse proxy
-WEBSERVER_PORT 80;
 
-proxy_response="$(curl --silent -A "Mozilla/4.0" localhost:${PORT}/echo1)"
+proxy_response="$(curl --silent -I localhost:${PORT}/proxy | head -n 1)"
 echo "$proxy_response"
 
-not_proxy_response="$(curl --silent -A "Mozilla/4.0" www.ucla.edu:${WEBSERVER_PORT})"
-echo "$not_proxy_response"
-
-if [ "$proxy_response" != "$not_proxy_response" ]; then
+if [ "$proxy_response" != "HTTP/1.1 200 OK\r\n" ]; then
   echo "Reverse Proxy Test failed - got different response than expected."
-  echo "Expected:"
-  printf '%s\n' "$proxy_response"
-  echo "Got:"
-  printf '%s\n' "$not_proxy_response"
+  echo "$proxy_response"
   EXIT_STATUS=1
 else
   echo "Reverse Proxy Test Passed."
