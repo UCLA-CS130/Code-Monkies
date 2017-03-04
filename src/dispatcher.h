@@ -26,6 +26,8 @@ class Dispatcher
           RequestHandler::CreateByName("NotFoundHandler"));
       handler_map_.emplace("ProxyHandler",
           RequestHandler::CreateByName("ProxyHandler"));
+      handler_map_.emplace("DelayHandler",
+          RequestHandler::CreateByName("DelayHandler"));
     }
 
     /*

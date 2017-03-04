@@ -108,6 +108,7 @@ bool Config::Validate(const NginxConfig *conf)
 		   "%lu, should have length 2.\n", tuple->tokens_.size());
 	    return false;
 	  }
+
 	  if (tuple->tokens_[0] != "host" && tuple->tokens_[0] != "host_port") {
 	    debugf("Config::Validate", "Unexpected token in ProxyHandler "
 		   "block: got %s, expected host or host_port.\n",
@@ -133,8 +134,6 @@ bool Config::Validate(const NginxConfig *conf)
     debugf("Config::Validate", "No port specified in configuration file.\n");
     return false;
   }
-
-  return true;
 }
 
 unsigned short Config::GetPort(const NginxConfig *conf)
@@ -145,7 +144,6 @@ unsigned short Config::GetPort(const NginxConfig *conf)
       return (unsigned short) strtol(stmt->tokens_[1].c_str(), nullptr, 10);
     }
   }
-
   debugf("Config::GetPort", "Failed to get port from config. This should "
 	 "never happen.\n");
   return 0;
@@ -153,8 +151,7 @@ unsigned short Config::GetPort(const NginxConfig *conf)
 
 
 bool Config::GetHandlerInfo(const NginxConfig *conf,
-                            const Request *req, 
-                            NginxConfigStatement *&info)
+			    const Request *req, NginxConfigStatement *&info)
 {
   /*
    * Look over req and conf to determine handler with longest matching prefix.
