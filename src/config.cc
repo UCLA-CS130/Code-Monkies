@@ -145,6 +145,7 @@ unsigned short Config::GetPort(const NginxConfig *conf)
       return (unsigned short) strtol(stmt->tokens_[1].c_str(), nullptr, 10);
     }
   }
+
   debugf("Config::GetPort", "Failed to get port from config. This should "
 	 "never happen.\n");
   return 0;
@@ -152,7 +153,8 @@ unsigned short Config::GetPort(const NginxConfig *conf)
 
 
 bool Config::GetHandlerInfo(const NginxConfig *conf,
-			    const Request *req, NginxConfigStatement *&info)
+                            const Request *req, 
+                            NginxConfigStatement *&info)
 {
   /*
    * Look over req and conf to determine handler with longest matching prefix.
