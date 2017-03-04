@@ -90,31 +90,23 @@ std::unique_ptr<Request> ProxyHandler::CreateProxyRequestFromClientRequest(const
   return new_request;
 }
 
-// https://gist.github.com/vladon/8b487e41cb3b49e172db
-std::string buffer_to_string(const boost::asio::streambuf& buffer) {
-  using boost::asio::buffers_begin;
-
-  auto bufs = buffer.data();
-  std::string result(buffers_begin(bufs), buffers_begin(bufs) + buffer.size());
-  return result;
-}
-
 std::string read_socket(boost::asio::ip::tcp::socket* sock) {
   // Lazy way to read response. Just read everything in and parse it later.
+  std::ostringstream ss;
   boost::system::error_code error;
   boost::asio::streambuf response_buff;
   while (boost::asio::read(*sock, 
 			   response_buff,
 			   boost::asio::transfer_at_least(1), 
 			   error)) {
-    std::cout << "Waiting for more input" << std::endl;
+    ss << &response_buff;
   }
   
   if (error != boost::asio::error::eof) {
     throw boost::system::system_error(error);
   }
   
-  return buffer_to_string(response_buff);
+  return ss.str();
 }
 
 std::unique_ptr<Response> ProxyHandler::ForwardRequest(const Request& request, 
@@ -143,8 +135,6 @@ std::unique_ptr<Response> ProxyHandler::ForwardRequest(const Request& request,
   write(sock, boost::asio::buffer(request.raw_request()));
   
   std::string ser_resp = read_socket(&sock);
-  std::cout << "Ser resp: " << std::endl << ser_resp << std::endl;
-
   std::unique_ptr<Response> resp = Response::Parse(ser_resp);  
   return resp;
 }
@@ -185,7 +175,9 @@ void ProxyHandler::ProcessRemoteResponse(Response& resp) {
     stripped_headers.push_back(header);
   }
   
-  resp.SetHeaders(stripped_headers);      
+
+  std::cout << "Response body size is " << resp.body().length() << std::endl;
+  //  resp.SetHeaders(stripped_headers);      
 }
 
 void ProxyHandler::RewriteUrls(Response& resp) {

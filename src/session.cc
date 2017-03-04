@@ -16,6 +16,7 @@ void Session::do_read()
 {
   auto self(shared_from_this());
   // TODO: what if the client sends us > 64 KB?
+  // Consider making this synchronous as well. 
   socket_.async_read_some(boost::asio::buffer(data_, MAX_LENGTH),
       [this, self](boost::system::error_code ec, std::size_t length)
       {
@@ -66,26 +67,7 @@ void Session::process_response()
 
 void Session::do_write(const Response &res)
 {
-  auto self(shared_from_this());
-
-  const std::string res_str = res.ToString();
-  const char *res_cstr = res_str.c_str();
-  size_t len = res_str.length();
-
-  debugf("Session::do_write", "do_write sending response of length %d\n",
-      len);
-
-  boost::asio::async_write(socket_, boost::asio::buffer(res_cstr,
-        len),
-      [this, self](boost::system::error_code ec, std::size_t length)
-      {
-        if (!ec) {
-          debugf("Session::do_write", "Wrote buffer of length %lu to "
-            "client.\n", length);
-          return;
-        } else {
-          debugf("Session::do_write", "Failed to write buffer to client. Got "
-            "error code: %d: %s.\n", ec.value(), ec.message().c_str());
-        }
-      });
+  // Synchronously write out socket info. Async write unable to stream more than 64kb. Also
+  // causes server to hang if multiple write requests are simultaneously made on the same socket.
+  boost::asio::write(socket_, boost::asio::buffer(res.ToString()));
 }
