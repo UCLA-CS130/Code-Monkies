@@ -20,6 +20,11 @@ path /proxy2 ProxyHandler {
   host_port 80;
 }
 
+path /proxy3 ProxyHandler {
+  host ucla.edu;
+  host_port 80;
+}
+
 path /delay DelayHandler {}
 
 # Default response handler if no handlers match.

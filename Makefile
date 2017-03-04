@@ -48,6 +48,10 @@ test: lib
 int-test: test
 	scripts/integration.sh && scripts/multithread_test.sh
 
+.PHONY: proxy-test
+proxy-test: lib
+	scripts/proxy_integration_test.sh
+
 .PHONY: gcov
 gcov: test
 	gcov -o $(OBJ_DIR) -r src/*

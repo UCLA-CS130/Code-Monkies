@@ -135,6 +135,7 @@ std::unique_ptr<Response> ProxyHandler::ForwardRequest(const Request& request,
   write(sock, boost::asio::buffer(request.raw_request()));
   
   std::string ser_resp = read_socket(&sock);
+  std::cout << ser_resp << std::endl;
   std::unique_ptr<Response> resp = Response::Parse(ser_resp);  
   return resp;
 }
