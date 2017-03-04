@@ -58,7 +58,7 @@ echo "$proxy_response"
 not_proxy_response="$(curl --silent -A "Mozilla/4.0" www.ucla.edu:${WEBSERVER_PORT})"
 echo "$not_proxy_response"
 
-if ["$proxy_response" != "$not_proxy_response"]; then
+if [ "$proxy_response" != "$not_proxy_response" ]; then
   echo "Reverse Proxy Test failed - got different response than expected."
   echo "Expected:"
   printf '%s\n' "$proxy_response"
