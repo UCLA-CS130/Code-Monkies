@@ -3,7 +3,7 @@
 #include <string>
 
 class ResponseTest : public ::testing::Test {
-public: 
+public:
 	Response* response_;
 
 	void SetUp() {
@@ -17,8 +17,8 @@ public:
 };
 
 TEST_F(ResponseTest, buildResponseNoHeadersNoBody) {
-	// We expect a carriage return to end the 
-	// empty headers and a carriage return to separate 
+	// We expect a carriage return to end the
+	// empty headers and a carriage return to separate
 	// the empty body
 	std::string expectedResponse = "HTTP/1.1 200 OK\r\n\r\n";
 
@@ -66,7 +66,7 @@ TEST_F(ResponseTest, parseFromRawResponse) {
 		"Content-Type: application/json\r\n"
 		"Cache-Control: max-age=60\r\n\r\n"
 		"{\"key\": 5}";
-  
+
   std::unique_ptr<Response> new_response = Response::Parse(rawResponse);
   EXPECT_EQ("HTTP/1.0", new_response->version());
   EXPECT_EQ("200 OK", new_response->status_message());
