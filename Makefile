@@ -52,6 +52,10 @@ int-test: test
 proxy-test: lib		
 	scripts/proxy_integration_test.sh
 
+.PHONY: proxy-302-test
+proxy-302-test: lib
+	scripts/proxy_302_test.sh
+
 .PHONY: gcov
 gcov: test
 	gcov -o $(OBJ_DIR) -r src/*
