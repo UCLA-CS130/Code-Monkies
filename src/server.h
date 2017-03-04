@@ -22,10 +22,14 @@ public:
   Server(boost::asio::io_service& io_service, const NginxConfig *conf);
 
 private:
+  // Number of threads to fork-join
+  const int NTHREADS = 4;
+  
   /*
    * Allocate session for connection and listen for the next one.
    */
   void do_accept();
+  void start_session(boost::system::error_code ec);
 
   // Boost TCP fields
   tcp::acceptor acceptor_;
