@@ -56,18 +56,6 @@ fi
 # run server in background
 bin/webserver $CONFIG_FILE 2>&1 >/dev/null &
 
-# integration test for reverse proxy
-
-proxy_response="$(curl --silent -I localhost:${PORT}/proxy | head -n 1 | tr -d '\r\n')"
-
-if [ "$proxy_response" != "HTTP/1.1 200 OK" ]; then
-  echo "Reverse Proxy Test failed - got different response than expected."
-  echo "$proxy_response"
-  EXIT_STATUS=1
-else
-  echo "Reverse Proxy Test Passed."
-fi
-
 good_response="GET /echo1 HTTP/1.1\r\nUser-Agent: Mozilla/4.0\r\n"
 good_response="${good_response}Host: localhost:8080\r\nAccept: */*\r\n\r\n"
 # turn C-style escape sequences into actual carriage returns and newlines

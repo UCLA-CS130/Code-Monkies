@@ -44,12 +44,18 @@ test: lib
 	$(MAKE) -C test
 	cd bin && ./webserver_tests
 
+.PHONY: proxy-test
+proxy-test: lib
+	$(MAKE) -C src test
+	$(MAKE) -C test
+	cd bin && ./proxy_webserver_tests
+
 .PHONY: int-test
 int-test: test
 	scripts/integration.sh && scripts/multithread_test.sh && scripts/proxy_integration_test.sh
 
-.PHONY: proxy-test
-proxy-test: lib		
+.PHONY: prox-int-test
+proxy-int-test: lib		
 	scripts/proxy_integration_test.sh
 
 .PHONY: proxy-302-test

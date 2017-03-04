@@ -6,7 +6,7 @@
 
 class ProxyHandlerTest : public ::testing::Test {
 public:
-	ProxyHandler* handler_;
+  ProxyHandler* handler_;
   NginxConfigParser parser_;
   NginxConfig config_;
 
@@ -24,14 +24,14 @@ public:
     return true;
   }
 
-	std::unique_ptr<Request> GetClientRequest() {
-		std::string request_str = \
-			"GET /proxy/path/to/some_file HTTP/1.1\r\n"
-			"Content-Type: text/plain\r\n\r\n"
-			"I AM A BODY!";
-		auto r = Request::Parse(request_str);
-		return r;
-	}
+  std::unique_ptr<Request> GetClientRequest() {
+    std::string request_str = \
+      "GET /proxy/path/to/some_file HTTP/1.1\r\n"
+      "Content-Type: text/plain\r\n\r\n"
+      "I AM A BODY!";
+    auto r = Request::Parse(request_str);
+    return r;
+  }
 
   std::unique_ptr<Response> GetResponse() {
     std::string response_str = \
@@ -49,7 +49,7 @@ TEST_F(ProxyHandlerTest, ProxyHandlerInitTest) {
 
 TEST_F(ProxyHandlerTest, RequestTransformationTest) {
   EXPECT_TRUE(CreateProxyHandlerTest());
-	auto req = GetClientRequest();
+  auto req = GetClientRequest();
   auto proxy_req = handler_->CreateProxyRequestFromClientRequest(*req, "localhost:8080");
   EXPECT_EQ("/path/to/some_file", proxy_req->uri());
 }

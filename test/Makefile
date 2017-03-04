@@ -16,6 +16,7 @@ TEST_DEP_OBJECTS=$(OBJ_DIR)/config_parser.o
 
 TEST_SOURCES=$(wildcard *.cc)
 TEST_OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(TEST_SOURCES))
+PROXY_TEST_OBJECT=$(OBJ_DIR)/proxy_handler_test.o
 
 SOURCES=$(wildcard $(SRC_DIR)/*.cc) \
 		$(wildcard $(SRC_DIR)/http/*.cc) \
@@ -35,7 +36,7 @@ $(EXECUTABLE): $(TEST_OBJECTS) $(SOURCE_OBJECTS) $(TEST_DEP_OBJECTS)
 	echo $(SOURCE_OBJECTS)
 	$(CXX) $^ $(GTEST_LIBS) -o $@ $(TEST_LDFLAGS)
 
-$(PROXY_HANDLER_EXECUTABLE): $(OBJ_DIR/proxy_handler_test.o) $(SOURCE_OBJECTS) $(TEST_DEP_OBJECTS)
+$(PROXY_HANDLER_EXECUTABLE): $(PROXY_TEST_OBJECT) $(SOURCE_OBJECTS) $(TEST_DEP_OBJECTS)
 	echo $(SOURCE_OBJECTS)
 	$(CXX) $^ $(GTEST_LIBS) -o $@ $(TEST_LDFLAGS)
 
