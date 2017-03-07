@@ -9,6 +9,13 @@ OUTPUT_FILE="/tmp/output-$(date +'%s')"
 PORT=8080
 EXIT_STATUS=0
 
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 num_requests"
+    exit 1
+fi
+
+num_reqs=$(($1 - 1))
+
 # don't clobber pre-existing files
 while [ -e $CONFIG_FILE ]; do
   CONFIG_FILE="/tmp/base_config-$(date +'%s')-$RANDOM"
@@ -64,12 +71,22 @@ bin/webserver $CONFIG_FILE 2>&1 >/dev/null &
 
 # Run delay first
 curl --silent localhost:${PORT}/delay >> $OUTPUT_FILE &
-curl --silent localhost:${PORT}/echo >> $OUTPUT_FILE
+
+# Run all requests
+for i in `seq 1 $num_reqs`; do
+    echo "Curling localhost:${PORT}/echo..."
+    curl --silent localhost:${PORT}/echo >> $OUTPUT_FILE
+    echo "Done"
+done
 
 # Wait for delay call to finish
 sleep 10
 
-EXPECTED_OUTPUT=`echo "GET /echo HTTP/1.1\r\nUser-Agent: curl/7.35.0\r\nHost: localhost:8080\r\nAccept: */*\r\n\r\nResponse delayed by 5 seconds"`
+EXPECTED_OUTPUT=""
+for i in `seq 1 $num_reqs`; do
+    EXPECTED_OUTPUT=`printf '%s' "GET /echo HTTP/1.1\r\nUser-Agent: curl/7.35.0\r\nHost: localhost:8080\r\nAccept: */*\r\n\r\n${EXPECTED_OUTPUT}"`
+done
+EXPECTED_OUTPUT=`echo "${EXPECTED_OUTPUT}Response delayed by 5 seconds"`
 ACTUAL_OUTPUT=`cat $OUTPUT_FILE`
 
 if [ "$EXPECTED_OUTPUT" != "$ACTUAL_OUTPUT" ]; then

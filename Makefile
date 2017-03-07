@@ -52,7 +52,7 @@ proxy-test: lib
 
 .PHONY: int-test
 int-test: test
-	scripts/integration.sh && scripts/multithread_test.sh && scripts/proxy_integration_test.sh
+	scripts/integration.sh && scripts/multithread_test.sh 2 && scripts/proxy_integration_test.sh
 
 .PHONY: proxy-int-test
 proxy-int-test: lib		
