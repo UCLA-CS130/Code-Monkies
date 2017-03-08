@@ -8,7 +8,7 @@
 # Project-wide compiler settings.
 export CXX=g++
 export CXXFLAGS=-c -std=c++11 -Wall -Wextra -Werror
-export LDFLAGS=-lgcov --coverage -lboost_system -lboost_thread -lboost_regex -lpthread
+export LDFLAGS=-static-libgcc -static-libstdc++ -lpthread -Wl,-Bstatic -lgcov --coverage -lboost_system -lboost_thread -lboost_regex
 export DEBUG_FLAGS=-DDEBUG -g
 
 ifdef VERBOSE
@@ -25,6 +25,10 @@ export BIN_DIR=$(PROJ_ROOT)/bin
 
 export GTEST_DIR=$(PROJ_ROOT)/lib/googletest/googletest
 export PARSER_DIR=$(PROJ_ROOT)/lib/nginx-configparser
+
+.PHONY: deploy
+deploy: compile
+	cd deploy && bin/webserver base_config
 
 .PHONY: compile
 compile: lib
