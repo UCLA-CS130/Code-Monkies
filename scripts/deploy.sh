@@ -23,6 +23,10 @@ if [ -e "$archive_file" ]; then
   rm "$archive_file"
 fi
 
+# Build docker image
+
+#sudo ./scripts/install_and_run.sh
+
 # need this to go into archive after un-tar-ing
 cwd="${PWD##*/}"
 
@@ -33,9 +37,8 @@ echo "scp -i $ssh_key_file $archive_file ${ssh_user}@${server_ip}:/tmp/$archive_
 scp -oStrictHostKeyChecking=no -i "$ssh_key_file" "$archive_file" \
   "${ssh_user}@$server_ip:/tmp/$archive_file"
 
-remote_cmd=`echo "cd /tmp; rm -rf $cwd; tar zxvf $archive_file;"`
-remote_cmd=`echo "$remote_cmd  cd $cwd; sudo ./scripts/install_and_run.sh"`
+ssh -oStrictHostKeyChecking=no -i "$ssh_key_file" "${ssh_user}@${server_ip}" \
+  "cd /tmp; tar zxvf $archive_file; cd $cwd; docker build -t httpserver deploy"
 
-echo "$remote_cmd"
-
-ssh -oStrictHostKeyChecking=no -i "$ssh_key_file" "${ssh_user}@${server_ip}" "$remote_cmd"
+ssh -oStrictHostKeyChecking=no -i "$ssh_key_file" "${ssh_user}@${server_ip}" \
+  "docker run httpserver"
