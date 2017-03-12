@@ -44,7 +44,15 @@ scp -oStrictHostKeyChecking=no -i "$ssh_key_file" deploy_img \
 
 rm deploy_img
 
-# Run server image on remote host as daemon
+# Kill existing Docker processes. TODO: this assumes that our server is the
+# only running Docker process.
+ssh -oStrictHostKeyChecking=no -i "$ssh_key_file" "${ssh_user}@${server_ip}" \
+  'docker ps | grep httpserver | awk '"'"'{print $1}'"'"' | xargs -I% docker rm -f %'
 
+# Delete old Docker image
+ssh -oStrictHostKeyChecking=no -i "$ssh_key_file" "${ssh_user}@${server_ip}" \
+  'docker images | grep httpserver | awk '"'"'{print $3}'"'"' | xargs -I% docker rmi -f %'
+
+# Run server image on remote host as daemon
 ssh -oStrictHostKeyChecking=no -i "$ssh_key_file" "${ssh_user}@${server_ip}" \
   "docker load -i deploy_img && docker run -d -p 8080:8080 httpserver"
