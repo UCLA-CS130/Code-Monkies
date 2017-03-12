@@ -26,10 +26,6 @@ export BIN_DIR=$(PROJ_ROOT)/bin
 export GTEST_DIR=$(PROJ_ROOT)/lib/googletest/googletest
 export PARSER_DIR=$(PROJ_ROOT)/lib/nginx-configparser
 
-.PHONY: deploy
-deploy: compile
-	cd deploy && bin/webserver base_config
-
 .PHONY: compile
 compile: lib
 	$(MAKE) -C src
