@@ -1,4 +1,6 @@
 #!/bin/bash
+# This script may not be necessary. It's used to install all Docker
+# dependencies on an Ubuntu machine.
 
 if [[ $EUID -ne 0 ]]; then
     echo "This script must be run as root."

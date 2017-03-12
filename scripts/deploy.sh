@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Deploy webserver to any remote server running Docker.
+# Requires that local machine is also running Docker.
+
 echo "Note that this utility must be run from the top level of the "
 echo "Code-Monkies repository, as such: ./scripts/deploy.sh"
 echo "If not called from here, it will not work."
@@ -18,16 +21,30 @@ server_ip="$1"
 ssh_user="$2"
 ssh_key_file="$3"
 
-# Make sure directory is empty to minimize transfer time.
-make clean
+# Build binary
 
-# Build docker image
+docker build -t httpserver.build .
 
-./scripts/install_dependencies
+docker run httpserver.build > binary.tar
 
-docker build -t httpserver .
+cd deploy && tar xvf ../binary.tar  && cd ..
 
-docker save -o <save image to path> <image name>
+rm binary.tar
 
-#ssh -oStrictHostKeyChecking=no -i "$ssh_key_file" "${ssh_user}@${server_ip}" \
-#  "docker run httpserver"
+# Build server image
+
+docker build -t httpserver deploy
+
+# Deploy server image to remote host
+
+docker save -o deploy_img httpserver
+
+scp -oStrictHostKeyChecking=no -i "$ssh_key_file" deploy_img \
+  "${ssh_user}@${server_ip}:~/"
+
+rm deploy_img
+
+# Run server image on remote host as daemon
+
+ssh -oStrictHostKeyChecking=no -i "$ssh_key_file" "${ssh_user}@${server_ip}" \
+  "docker load -i deploy_img && docker run -d -p 8080:8080 httpserver"

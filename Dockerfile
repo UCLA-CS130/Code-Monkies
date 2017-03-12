@@ -6,6 +6,4 @@ WORKDIR /opt/webserver
 COPY . /opt/webserver
 RUN make clean && make
 
-EXPOSE 8080:8080
-
 CMD tar -cf - bin/webserver
