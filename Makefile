@@ -8,7 +8,9 @@
 # Project-wide compiler settings.
 export CXX=g++
 export CXXFLAGS=-c -std=c++11 -Wall -Wextra -Werror
-export LDFLAGS=-lgcov --coverage -lboost_system -lboost_thread -lboost_regex -lpthread -lpython2.7
+
+export LDFLAGS=-static-libgcc -static-libstdc++ -lpthread -Wl,-Bstatic -lgcov --coverage -lboost_system -lboost_thread -lboost_regex -lpython2.7
+
 export DEBUG_FLAGS=-DDEBUG -g
 
 ifdef VERBOSE
@@ -52,7 +54,7 @@ proxy-test: lib
 
 .PHONY: int-test
 int-test: test
-	scripts/integration.sh && scripts/multithread_test.sh && scripts/proxy_integration_test.sh
+	scripts/integration.sh && scripts/multithread_test.sh 2 && scripts/proxy_integration_test.sh
 
 .PHONY: proxy-int-test
 proxy-int-test: lib		
