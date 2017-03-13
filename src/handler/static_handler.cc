@@ -30,17 +30,20 @@ Header StaticHandler::getContentTypeFromExtension(const std::string& extension) 
 	static const std::string image_jpeg = "image/jpeg",
 	  image_png =  "image/png",
 	  text_html =  "text/html",
+	  text_html_utf = "text/html; charset=utf-8",
 	  text_plain = "text/plain";
 
 	// Images should be "Content-Type: application/image"						 
 	if (extension.compare(jpg) == 0) {
-		return std::make_pair("Content-Type", image_jpeg);
+	  return std::make_pair("Content-Type", image_jpeg);
 	} else if (extension.compare(png) == 0) {
-		return std::make_pair("Content-Type", image_png);
-	} else if (extension.compare(html) == 0 || extension.compare(md) == 0) {
-		return std::make_pair("Content-Type", text_html);
+	  return std::make_pair("Content-Type", image_png);
+	} else if (extension.compare(html) == 0) {
+	  return std::make_pair("Content-Type", text_html);
+	} else if (extension.compare(md) == 0) {
+	  return std::make_pair("Content-Type", text_html_utf);
 	} else {  // Default, just assume it is plaintext	
-		return std::make_pair("Content-Type", text_plain);
+	  return std::make_pair("Content-Type", text_plain);
 	}
 }
 
