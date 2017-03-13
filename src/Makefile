@@ -1,9 +1,9 @@
-INCLUDES=-I. -I$(PARSER_DIR) -Ihttp -I$(GTEST_DIR)/include
+INCLUDES=-I. -I$(PARSER_DIR) -Ihttp -I$(GTEST_DIR)/include -I/usr/include/
 CXXFLAGS+=$(INCLUDES)
 
 CC_SOURCES=$(wildcard *.cc) \
 		   $(wildcard api/*.cc) \
-   		   $(wildcard handler/*.cc)
+		   $(wildcard handler/*.cc)
 
 OBJECTS=$(patsubst %.cc,$(OBJ_DIR)/%.o,$(CC_SOURCES))
 DEPS=$(OBJ_DIR)/config_parser.o
